@@ -1,0 +1,11 @@
+node_modules/
+functions/node_modules/
+.firebase/
+.env*
+!.env.example
+*-debug.log*
+data/
+migration-output/
+*service-account*.json
+*.pem
+*.key

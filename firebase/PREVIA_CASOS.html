@@ -1,0 +1,260 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verificação do cadastro | DEPATRI</title><style>:root{color-scheme:dark;--bg:#101112;--panel:#1b1d1f;--field:#25282b;--border:#3b3e42;--gold:#e7c657;--text:#f4f4f0;--muted:#b8bdc4;font-family:Arial,Helvetica,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5}
+[hidden]{display:none!important}.topbar{min-height:90px;padding:20px max(24px,calc((100vw - 1240px)/2));display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid #6a5e30;background:#151718}
+.brand{display:flex;gap:14px;align-items:center;font-weight:700;letter-spacing:1px;color:var(--gold)}.brand-mark{width:40px;height:45px;border:1px solid var(--gold);display:grid;place-items:center;font-size:24px;border-radius:8px 8px 18px 18px}.brand small{display:block;font-size:11px;color:var(--muted);font-weight:400;letter-spacing:0;margin-top:3px}
+main{max-width:1240px;margin:0 auto;padding:24px}footer{max-width:1240px;margin:32px auto;padding:20px 24px;color:#8c9299;font-size:12px;border-top:1px solid #282b2e}
+h1{font-size:28px;letter-spacing:-.5px;margin:0 0 7px}h2{font-size:18px;margin:0 0 22px}.eyebrow{font-size:11px!important;font-weight:700;letter-spacing:1.8px;color:var(--gold)!important;margin:0 0 10px!important}p{color:var(--muted);margin:8px 0 0}.section-heading{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:14px 0 30px}.section-heading>div>p:last-child{font-size:14px}
+.panel{padding:24px;background:var(--panel);border:1px solid #34373a;border-radius:10px;margin:0 0 20px}.fields{display:grid;grid-template-columns:1.2fr 1fr 1.5fr;gap:18px}label{display:block;font-size:13px;font-weight:600;color:#e1e3e5}input,select{font:inherit;font-size:14px;color:var(--text);display:block;width:100%;height:44px;margin-top:8px;padding:0 12px;background:var(--field);border:1px solid var(--border);border-radius:5px;min-width:0}select{padding-right:24px}input::placeholder{color:#9ca3ac}input:focus,select:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}select:disabled{opacity:.6}
+button{border:1px solid var(--gold);background:var(--gold);color:#1e1d17;font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:11px 18px;border-radius:5px;white-space:nowrap}button:hover{filter:brightness(1.08)}button:disabled{opacity:.5;cursor:wait}.secondary{background:transparent;color:var(--gold);border-color:#6c613a}.actions{display:flex;gap:12px;margin-top:22px}.select-row{display:flex;gap:16px;align-items:flex-end}.select-row label{flex:1}.select-row button{height:44px}
+.case-summary{display:grid;grid-template-columns:1.2fr 1fr 1.5fr;border-top:1px solid #3a3d40;padding-top:20px;margin:24px 0 0;gap:18px}.case-summary dt{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}.case-summary dd{margin:7px 0 0;font-size:14px;overflow-wrap:anywhere}.table-scroll{overflow:auto}table{width:100%;border-collapse:collapse;text-align:left;min-width:650px}th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:500;background:#222528}td,th{padding:12px 14px;border-bottom:1px solid #34373a}td{font-size:13px}td:nth-child(2){color:var(--gold)}[data-more]{margin-top:16px}[data-save-message]{font-size:13px}[data-demand-message]{font-size:13px;margin-bottom:15px}.login-panel{max-width:450px;margin:60px auto}.login-panel label{margin:20px 0}.login-panel button{width:100%}#status:empty{display:none}
+@media(max-width:850px){.fields,.case-summary{grid-template-columns:1fr}.section-heading{align-items:flex-start}.topbar{padding:16px 20px}.brand small{max-width:240px}main{padding:20px}.panel{padding:20px}.case-summary{gap:18px}}
+@media(max-width:500px){h1{font-size:24px}.section-heading{flex-direction:column;gap:16px}.select-row{flex-direction:column;align-items:stretch}.brand small{font-size:10px;max-width:200px}.brand{font-size:14px}.topbar{gap:10px}.brand-mark{display:none}.topbar button{padding:8px 10px}.actions{flex-wrap:wrap}}
+</style></head>
+<body><header class="topbar"><div class="brand"><span class="brand-mark">D</span><div>PORTAL DEPATRI<small>Prévia com dados de teste</small></div></div></header>
+<main><div id="cases"></div><section class="panel"><p class="eyebrow">VERIFICAÇÃO DA INTEGRAÇÃO</p><h2>Registro de Demandas</h2>
+<div class="fields"><label>Fenômeno Criminal<select id="dem_caso"></select></label>
+<label>Fenômeno criminal — busca<select id="dem_busca_caso_especifico"></select></label></div>
+<p>Estes seletores demonstram o compartilhamento da lista. O formulário completo de Demandas Ativas ainda depende da integração dos arquivos originais.</p></section></main>
+<script type="module">
+const key = value => String(value ?? '').normalize('NFKC').normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '').trim().replace(/\s+/g, ' ').toUpperCase();
+
+class CasesStore {
+  constructor(call, uuid = () => crypto.randomUUID()) {
+    this.call = call; this.uuid = uuid; this.listeners = new Set();
+    this.epoch = 0; this.version = 0; this.busy = false; this.pending = null;
+    this.state = {casos: [], tipos: [], podeCadastrar: false, sessionCleared: false};
+  }
+  snapshot() { return structuredClone(this.state); }
+  emit() { for (const listener of this.listeners) listener(this.snapshot()); }
+  subscribe(listener) { this.listeners.add(listener); listener(this.snapshot()); return () => this.listeners.delete(listener); }
+  reset() {
+    this.epoch++; this.version++; this.pending = null;
+    this.state = {casos: [], tipos: [], podeCadastrar: false, sessionCleared: true}; this.emit();
+  }
+  async refresh() {
+    const epoch = this.epoch, version = ++this.version, cases = new Map(), seen = new Set();
+    let cursor = null, page;
+    do {
+      page = await this.call('obterBootstrapCasosPrioritarios', {cursor});
+      if (epoch !== this.epoch || version !== this.version) return this.snapshot();
+      for (const c of page.casos) cases.set(c.id, c);
+      cursor = page.proximaPagina;
+      if (cursor) {
+        const token = JSON.stringify(cursor);
+        if (seen.has(token)) throw new Error('Não foi possível atualizar a lista completa.');
+        seen.add(token);
+      }
+    } while (cursor);
+    this.state = {casos: [...cases.values()].sort((a, b) => a.nomeCaso.localeCompare(b.nomeCaso, 'pt-BR')),
+      tipos: page.tipos, podeCadastrar: page.podeCadastrar === true, sessionCleared: false};
+    this.emit(); return this.snapshot();
+  }
+  async create(input) {
+    if (!this.state.podeCadastrar) throw new Error('Seu perfil permite apenas consultar casos.');
+    if (this.busy) throw new Error('Aguarde a conclusão do cadastro.');
+    const payload = {nomeCaso: input.nomeCaso.trim(), tipoCrime: input.tipoCrime, subtipoCrime: input.subtipoCrime || ''};
+    const signature = JSON.stringify([key(payload.nomeCaso), key(payload.tipoCrime), key(payload.subtipoCrime)]);
+    if (this.pending?.signature !== signature) this.pending = {signature, id: this.uuid()};
+    const epoch = this.epoch;
+    this.busy = true;
+    try {
+      const saved = await this.call('salvarCasoPrioritarioSemEventos', {...payload, solicitacaoId: this.pending.id});
+      if (epoch !== this.epoch) throw new Error('A sessão mudou. Entre novamente para consultar o cadastro.');
+      this.pending = null; this.version++;
+      // A gravação confirmada alimenta todos os seletores imediatamente.
+      this.state.casos = [...this.state.casos.filter(c => c.id !== saved.id), saved]
+        .sort((a, b) => a.nomeCaso.localeCompare(b.nomeCaso, 'pt-BR'));
+      this.emit();
+      let listaAtualizada = true;
+      try { await this.refresh(); } catch { listaAtualizada = false; }
+      if (epoch !== this.epoch) throw new Error('A sessão mudou. Entre novamente para consultar o cadastro.');
+      return {...saved, listaAtualizada};
+    } finally { this.busy = false; }
+  }
+  async demands(casoId, cursor = null) {
+    const epoch = this.epoch;
+    const result = await this.call('listarDemandasCasoPrioritario', {casoId, cursor});
+    if (epoch !== this.epoch) throw new Error('Sessão encerrada.');
+    return result;
+  }
+  async bindDemand(demandaId, casoId) {
+    const epoch = this.epoch;
+    const result = await this.call('vincularCasoDemanda', {demandaId, casoId});
+    if (epoch !== this.epoch) throw new Error('Sessão encerrada.');
+    return result;
+  }
+}
+
+function option(select, value, label, caseId = '') {
+  const el = select.ownerDocument.createElement('option');
+  el.value = value; el.textContent = label; el.dataset.casoId = caseId;
+  select.append(el); return el;
+}
+function bindCaseSelector(store, select, {placeholder = 'Selecione um caso', valueMode = 'id'} = {}) {
+  if (!['id', 'nome'].includes(valueMode)) throw new Error('Formato de seletor inválido.');
+  const syncId = () => { select.dataset.casoId = select.selectedOptions[0]?.dataset.casoId || ''; };
+  const unsubscribe = store.subscribe(({casos, sessionCleared}) => {
+    const previous = sessionCleared ? '' : select.value, previousId = sessionCleared ? '' : select.dataset.casoId || '';
+    select.replaceChildren(); option(select, '', placeholder);
+    for (const c of casos) option(select, valueMode === 'id' ? c.id : c.nomeCaso, c.nomeCaso, c.id);
+    const match = [...select.options].find(o => previousId ? o.dataset.casoId === previousId : o.value === previous);
+    if (match) select.value = match.value;
+    else if (previous) {
+      // Preserva a referência histórica para revisão, sem convertê-la em um caso arbitrário.
+      const old = option(select, previous, `${previous} (registro anterior)`);
+      old.dataset.unmapped = 'true'; select.value = previous;
+    }
+    syncId();
+  });
+  select.addEventListener('change', syncId);
+  return () => { unsubscribe(); select.removeEventListener('change', syncId); };
+}
+function mountCases(root, store) {
+  root.innerHTML = `
+    <header class="section-heading"><div><p class="eyebrow">ACOMPANHAMENTO DE CASOS</p>
+      <h1>Casos prioritários</h1><p>Cadastre um caso e consulte as demandas vinculadas.</p></div>
+      <button type="button" data-new>Novo caso</button></header>
+    <section class="panel" data-create hidden><h2>Cadastrar caso</h2>
+      <form data-form><div class="fields">
+        <label>Nome do caso<input name="nomeCaso" maxlength="150" required autocomplete="off" placeholder="Ex.: FURTO DE HILUX"></label>
+        <label>Tipo de crime<select name="tipoCrime" required><option value="">Selecione</option></select></label>
+        <label>Subtipo de crime<select name="subtipoCrime" required disabled><option value="">Selecione o tipo primeiro</option></select></label>
+      </div><div class="actions"><button type="submit">Cadastrar caso</button><button type="button" class="secondary" data-cancel>Cancelar</button></div>
+      <p data-save-message role="status" aria-live="polite"></p></form></section>
+    <section class="panel"><div class="select-row"><label>Selecione um caso<select data-case></select></label>
+      <button type="button" class="secondary" data-refresh>Atualizar lista</button></div>
+      <p data-list-message role="status" aria-live="polite"></p>
+      <div data-summary hidden><dl class="case-summary"><div><dt>Nome do caso</dt><dd data-name></dd></div>
+        <div><dt>Tipo de crime</dt><dd data-type></dd></div><div><dt>Subtipo de crime</dt><dd data-subtype></dd></div></dl></div>
+    </section>
+    <section class="panel" data-linked hidden><h2>Demandas vinculadas</h2>
+      <p data-demand-message role="status" aria-live="polite"></p>
+      <div class="table-scroll"><table><thead><tr><th>Data</th><th>Procedimento</th><th>Unidade responsável</th><th>Status</th><th>Crime</th></tr></thead><tbody></tbody></table></div>
+      <button type="button" class="secondary" data-more hidden>Carregar mais</button></section>`;
+  const $ = selector => root.querySelector(selector);
+  const form = $('[data-form]'), type = form.elements.tipoCrime, subtype = form.elements.subtipoCrime;
+  const select = $('[data-case]'), saveMessage = $('[data-save-message]'), listMessage = $('[data-list-message]');
+  const demandMessage = $('[data-demand-message]');
+  let state = store.snapshot(), requestVersion = 0, next = null, destroyed = false, loading = false;
+  const unbind = bindCaseSelector(store, select);
+  function populateSubtypes(previous = '') {
+    const types = state.tipos.find(c => c.tipo === type.value)?.subtipos || [];
+    subtype.replaceChildren();
+    option(subtype, '', !type.value ? 'Selecione o tipo primeiro' : types.length ? 'Selecione' : 'Sem subtipo cadastrado');
+    types.forEach(s => option(subtype, s, s));
+    subtype.disabled = !types.length; subtype.required = types.length > 0;
+    if (types.includes(previous)) subtype.value = previous;
+  }
+  function summary() {
+    const c = state.casos.find(row => row.id === select.value);
+    $('[data-summary]').hidden = !c;
+    if (c) { $('[data-name]').textContent = c.nomeCaso; $('[data-type]').textContent = c.tipoCrime; $('[data-subtype]').textContent = c.subtipoCrime || 'Sem subtipo cadastrado'; }
+  }
+  const unsubscribe = store.subscribe(s => {
+    state = s; const previousType = type.value, previousSubtype = subtype.value;
+    type.replaceChildren(); option(type, '', 'Selecione'); state.tipos.forEach(c => option(type, c.tipo, c.tipo));
+    if (state.tipos.some(c => c.tipo === previousType)) type.value = previousType;
+    populateSubtypes(previousSubtype); $('[data-new]').hidden = !state.podeCadastrar;
+    if (!state.podeCadastrar) $('[data-create]').hidden = true;
+    summary();
+  });
+  async function queryDemands(append = false) {
+    const caseId = select.dataset.casoId;
+    const current = ++requestVersion;
+    if (!append) { $('tbody').replaceChildren(); next = null; }
+    $('[data-linked]').hidden = !caseId; $('[data-more]').hidden = true; summary();
+    if (!caseId) return;
+    loading = true; demandMessage.textContent = 'Carregando demandas…';
+    try {
+      const response = await store.demands(caseId, append ? next : null);
+      if (destroyed || current !== requestVersion || select.dataset.casoId !== caseId) return;
+      for (const d of response.demandas) {
+        const tr = root.ownerDocument.createElement('tr');
+        for (const value of [d.dataOcorrencia, d.numeroProcedimento, d.unidadeResponsavel, d.status, d.crimeTipo]) {
+          const td = root.ownerDocument.createElement('td'); td.textContent = value || '—'; tr.append(td);
+        }
+        $('tbody').append(tr);
+      }
+      next = response.proximaPagina; $('[data-more]').hidden = !next;
+      demandMessage.textContent = $('tbody').children.length ? '' : 'Nenhuma demanda vinculada a este caso para o seu acesso.';
+    } catch (error) { if (!destroyed && current === requestVersion) demandMessage.textContent = error.message; }
+    finally { if (current === requestVersion) loading = false; }
+  }
+  function setMode(mode) {
+    $('[data-create]').hidden = mode !== 'novo' || !state.podeCadastrar;
+    if (!$('[data-create]').hidden) form.elements.nomeCaso.focus();
+  }
+  $('[data-new]').onclick = () => setMode('novo');
+  $('[data-cancel]').onclick = () => setMode('visualizar');
+  type.onchange = () => populateSubtypes();
+  select.addEventListener('change', () => queryDemands());
+  $('[data-more]').onclick = () => { if (!loading) queryDemands(true); };
+  async function refresh() {
+    $('[data-refresh]').disabled = true; listMessage.textContent = 'Atualizando lista…';
+    try { await store.refresh(); if (!destroyed) { listMessage.textContent = ''; await queryDemands(); } }
+    catch (error) { if (!destroyed) listMessage.textContent = error.message; }
+    finally { if (!destroyed) $('[data-refresh]').disabled = false; }
+  }
+  $('[data-refresh]').onclick = refresh;
+  form.onsubmit = async event => {
+    event.preventDefault(); if (!form.reportValidity()) return;
+    const submit = form.querySelector('button[type="submit"]'); submit.disabled = true;
+    saveMessage.textContent = 'Cadastrando…';
+    try {
+      const saved = await store.create({nomeCaso: form.elements.nomeCaso.value, tipoCrime: type.value, subtipoCrime: subtype.value});
+      if (destroyed) return;
+      select.value = saved.id; select.dispatchEvent(new select.ownerDocument.defaultView.Event('change'));
+      saveMessage.textContent = saved.listaAtualizada ? 'Caso cadastrado. A lista de fenômenos criminais foi atualizada.'
+        : 'Caso cadastrado. A atualização dos demais casos falhou; use Atualizar lista.';
+      form.reset(); populateSubtypes();
+    } catch (error) { if (!destroyed) saveMessage.textContent = error.message; }
+    finally { if (!destroyed) submit.disabled = false; }
+  };
+  return {refresh, setMode, destroy() { destroyed = true; requestVersion++; unbind(); unsubscribe(); root.replaceChildren(); }};
+}
+
+
+// Instalar após a autenticação Firebase e a montagem dos formulários do portal.
+// O formulário legado continua exibindo nomes; casoId acompanha a seleção.
+function integratePortalCases({store, casesRoot, demandFormSelect, demandSearchSelect}) {
+  const bindings = [];
+  if (demandFormSelect) bindings.push(bindCaseSelector(store, demandFormSelect, {valueMode: 'nome', placeholder: 'Selecione'}));
+  if (demandSearchSelect) bindings.push(bindCaseSelector(store, demandSearchSelect, {valueMode: 'nome', placeholder: 'Todos'}));
+  const view = mountCases(casesRoot, store);
+  function selectedCase(select) {
+    if (!select || !select.value) return {casoId: null, casoNome: ''};
+    const casoId = select.dataset.casoId;
+    if (!casoId) throw new Error('O caso deste registro anterior precisa ser conferido antes de alterar o vínculo.');
+    const selected = store.snapshot().casos.find(c => c.id === casoId);
+    if (!selected) throw new Error('Atualize a lista e selecione o caso novamente.');
+    return {casoId, casoNome: selected.nomeCaso};
+  }
+  return {
+    refresh: () => view.refresh(),
+    setMode: mode => view.setMode(mode === 'novo' || mode === 'NOVO' ? 'novo' : 'visualizar'),
+    getDemandCase: () => selectedCase(demandFormSelect),
+    getSearchCase: () => selectedCase(demandSearchSelect),
+    destroy() { bindings.forEach(dispose => dispose()); view.destroy(); }
+  };
+}
+
+const {tipos} = {"schemaVersion":1,"tipos":[{"tipo":"ROUBO","subtipos":["ROUBO A BANCO","ROUBO CABOS/FIOS","ROUBO DE CARGA","ROUBO DE VEICULO","ROUBO COM RESTRICAO DE LIBERDADE DA VITIMA","ROUBO A PESSOA","ROUBO A RESIDENCIA","ROUBO DE DISPOSITIVO DE TELEFONIA MOVEL","ROUBO A ESTABELECIMENTO COMERCIAL","ROUBO (OUTROS)"]},{"tipo":"FURTO","subtipos":["FURTO A RESIDENCIA","FURTO DE VEICULO","FURTO DE CARGA","FURTO DE DISPOSITIVO DE TELEFONIA MOVEL","FURTO A ESTABELECIMENTO COMERCIAL","FURTO CABOS/FIOS","FURTO (OUTROS)"]},{"tipo":"EXTORSAO","subtipos":["EXTORSAO MEDIANTE SEQUESTRO","EXTORSAO COM RESTRIÇÃO A LIBERDADE","EXTORSAO (OUTROS)"]},{"tipo":"SEQUESTRO","subtipos":["SEQUESTRO E CARCERE PRIVADO"]},{"tipo":"ESTELIONATO","subtipos":["ESTELIONATO"]},{"tipo":"RECEPTACAO","subtipos":["RECEPTACAO"]},{"tipo":"ORGANIZACAO CRIMINOSA/ASSOCIAÇÃO CRIMINOSA","subtipos":["ORGANIZACAO CRIMINOSA/ASSOCIAÇÃO CRIMINOSA"]},{"tipo":"TRAFICO DE DROGAS","subtipos":["TRAFICO DE DROGAS"]},{"tipo":"OUTROS","subtipos":[]}]};
+const cases = [], requests = new Map();
+const store = new CasesStore(async (name, payload) => {
+  if (name === 'obterBootstrapCasosPrioritarios') return {casos: structuredClone(cases), tipos, podeCadastrar: true, proximaPagina: null};
+  if (name === 'salvarCasoPrioritarioSemEventos') {
+    if (requests.has(payload.solicitacaoId)) return requests.get(payload.solicitacaoId);
+    if (cases.some(c => key(c.nomeCaso) === key(payload.nomeCaso))) throw new Error('Já existe um caso com esse nome. Selecione o caso cadastrado.');
+    const saved = {id: crypto.randomUUID(), nomeCaso: payload.nomeCaso.toUpperCase(), tipoCrime: payload.tipoCrime, subtipoCrime: payload.subtipoCrime};
+    cases.push(saved); requests.set(payload.solicitacaoId, saved); return saved;
+  }
+  if (name === 'listarDemandasCasoPrioritario') return {demandas: [], proximaPagina: null};
+  throw new Error('Operação indisponível na prévia.');
+});
+const integration = integratePortalCases({store, casesRoot: document.querySelector('#cases'),
+  demandFormSelect: document.querySelector('#dem_caso'), demandSearchSelect: document.querySelector('#dem_busca_caso_especifico')});
+await integration.refresh();
+
+</script></body></html>

@@ -1,0 +1,26 @@
+{
+  "functions": [{"source": "functions", "codebase": "depatri-casos", "runtime": "nodejs22", "predeploy": ["node scripts/check.mjs --production"]}],
+  "firestore": {"rules": "firestore.rules", "indexes": "firestore.indexes.json"},
+  "hosting": {
+    "predeploy": ["node scripts/check.mjs --production"],
+    "public": "public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "headers": [
+      {"source": "**", "headers": [
+        {"key": "X-Content-Type-Options", "value": "nosniff"},
+        {"key": "Referrer-Policy", "value": "no-referrer"},
+        {"key": "X-Frame-Options", "value": "DENY"}
+      ]},
+      {"source": "/firebase-config.json", "headers": [{"key": "Cache-Control", "value": "no-store"}]},
+      {"source": "/**/*.js", "headers": [{"key": "Cache-Control", "value": "no-cache"}]}
+    ]
+  },
+  "emulators": {
+    "auth": {"host": "127.0.0.1", "port": 9099},
+    "functions": {"host": "127.0.0.1", "port": 5001},
+    "firestore": {"host": "127.0.0.1", "port": 8080},
+    "hosting": {"host": "127.0.0.1", "port": 5000},
+    "ui": {"enabled": true, "host": "127.0.0.1", "port": 4000},
+    "singleProjectMode": true
+  }
+}

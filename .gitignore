@@ -1,0 +1,16 @@
+node_modules/
+firebase/functions/node_modules/
+firebase/node_modules/
+*.log
+.env
+.env.*
+originais/
+data/
+migration-output/
+firebase/data/
+firebase/migration-output/
+service-account*.json
+*-firebase-adminsdk-*.json
+APPS_SCRIPT_PROPERTIES.local.json
+firebase-debug.log
+firestore-debug.log

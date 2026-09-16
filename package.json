@@ -1,0 +1,17 @@
+{
+  "name": "portal-depatri-atualizacao-originais",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/apply.mjs",
+    "test": "node --test tests/*.test.cjs",
+    "sanitize:public": "node scripts/sanitize-public.mjs",
+    "firebase:check": "npm --prefix firebase run check",
+    "firebase:test": "npm --prefix firebase test",
+    "firebase:configure": "node firebase/scripts/configure-project.mjs"
+  },
+  "devDependencies": {
+    "acorn": "8.15.0",
+    "jsdom": "30.0.1"
+  }
+}

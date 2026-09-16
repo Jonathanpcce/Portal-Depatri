@@ -1,0 +1,13 @@
+{
+  "name": "portal-depatri-casos-firebase",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test functions/test/*.test.cjs test/*.test.mjs",
+    "check": "node scripts/check.mjs",
+    "preview": "node scripts/preview.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "30.0.1"
+  }
+}

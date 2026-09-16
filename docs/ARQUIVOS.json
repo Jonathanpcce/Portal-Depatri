@@ -1,0 +1,34 @@
+{
+  "MAESTRO.gs": {
+    "origem": "Texto colado(20260915-170738).txt",
+    "sha256Origem": "350251d0accac96c7115bc0226749a536a2ffed8330da040f1602cdcea94ed07",
+    "sha256Entrega": "2d587fab0b40dced30a9bc4b9371fe7298a5b6fafe7b07cda8ef0cb61aeac735",
+    "alterado": true,
+    "configuracaoPrivadaExternalizada": true
+  },
+  "INDEX.html": {
+    "origem": "Código colado(20260915-170801).html",
+    "sha256Origem": "9e3235bbf01ff0b076c85f2b016d8414bc48cad9cb9491209ead1270d1d6699e",
+    "sha256Entrega": "90d80d037877c7d85f7a2be51fe8f45eb996c9b78149c97b41e4859da6842f37",
+    "alterado": true
+  },
+  "JAVASCRIPT.html": {
+    "origem": "Texto colado(20260915-170820).txt",
+    "sha256Origem": "a0b25e0db6c06a43f63ff277fd4ad8129eab07e803cef8a22ec77cfab55c0e5b",
+    "sha256Entrega": "dc0477f3777fc0142f8cd2c257c7be48a42fbd198d1f8c73e8b8f19b2602adf4",
+    "alterado": true
+  },
+  "DASHBOARD.gs": {
+    "origem": "Texto colado(20260915-170851).txt",
+    "sha256Origem": "b3f299fd30127e0c55712201953a2e6c3933398a9d6921937af8422478841233",
+    "sha256Entrega": "63e6555f479a975eb1aaa95f16e2beecc4bfad3ec041343d694bab45a05dff68",
+    "alterado": true,
+    "configuracaoPrivadaExternalizada": true
+  },
+  "DASHBOARD_JS.html": {
+    "origem": "Texto colado(20260915-170924).txt",
+    "sha256Origem": "79ed3f4f30f0c0bfd234f8d5651b84a6a3ac7de4ddd1cea0e1c778b17d977382",
+    "sha256Entrega": "79ed3f4f30f0c0bfd234f8d5651b84a6a3ac7de4ddd1cea0e1c778b17d977382",
+    "alterado": false
+  }
+}

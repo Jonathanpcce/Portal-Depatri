@@ -1,0 +1,1682 @@
+<script>
+// ============================================================================
+// MÓDULO 8 - DASHBOARD OPERACIONAL + PAINEL DEPATRI DINÂMICO (FRONTEND)
+// Substitua TODO o conteúdo do arquivo DASHBOARD_JS.html por este código.
+// ============================================================================
+
+var DASHBOARD_JS_BUILD_ID = 'DEPATRI-RELATORIOS-DELEGACIAS-20260905-02';
+
+if (typeof console !== 'undefined' && console.info) {
+  console.info('[DEPATRI] Frontend do dashboard carregado:', DASHBOARD_JS_BUILD_ID);
+}
+
+var DASHBOARD_PORTAL_STATE = {
+  bootstrapped: false,
+  loading: false,
+  charts: {},
+  tabelaCompleta: [],
+  intervalo: null,
+  pesquisaTabela: '',
+  painelConfig: null,
+  painelCanEdit: false,
+  painelDados: null,
+  painelEditorCards: [],
+  painelEditorContador: null,
+  painelSeletorContador: null,
+  salvandoConfig: false,
+  visaoAtual: 'GERAL'
+};
+
+
+// Substitua pelos links públicos do Drive, se quiser usar imagens reais.
+// O painel funciona sem eles, usando fallback visual.
+var DASHBOARD_DEPATRI_ASSETS = {
+  brasaoUrl: 'https://www.policiacivil.ce.gov.br/wp-content/uploads/sites/26/2019/11/NOVO-brasa%CC%83o-PC-Ceara%CC%81-600x600.jpeg',
+  predioUrl: 'https://drive.google.com/thumbnail?id=1YbMcyMlFMLfr5V_oZW7QEqZA7ZAkNrmj&sz=w2000'
+};
+
+
+function usuarioPodeVerDashboardPortal() {
+  return podeAcessarModuloPortal_('modDashboard');
+}
+
+
+function aplicarVisibilidadeDashboardPortal() {
+  var podeVer = usuarioPodeVerDashboardPortal();
+  definirVisibilidadeLinkPortal_("a[onclick=\"navegar('modDashboard')\"]", podeVer);
+
+
+  var tela = document.getElementById('modDashboard');
+  if (tela) {
+    tela.hidden = !podeVer;
+    if (!podeVer) {
+      tela.style.display = 'none';
+      tela.classList.remove('tela-ativa');
+    }
+  }
+}
+
+
+function inicializarDashboardPortal() {
+  if (!usuarioAtual) return;
+  montarEstruturaDashboardPortal();
+
+
+  if (!DASHBOARD_PORTAL_STATE.bootstrapped) {
+    carregarBootstrapDashboardPortal();
+  } else {
+    sincronizarFiltrosDashboardComAcesso();
+    carregarDadosDashboardPortal(true);
+  }
+
+
+  iniciarAutoRefreshDashboardPortal();
+}
+
+
+function injetarCssDashboardDepatri_() {
+  if (document.getElementById('dashboardDepatriCss')) return;
+  var style = document.createElement('style');
+  style.id = 'dashboardDepatriCss';
+  style.textContent = `
+    .dashboard-top-filter-card{background:#1e1e1e;border:1px solid #333;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+    .dash-view-pill{background:#111;border:1px solid #333;border-radius:12px;padding:10px 12px;color:#f8f9fa}
+
+
+    .painel-depatri{--azul:#082b66;--azul2:#0d3f91;--verde:#13772b;--vermelho:#b42318;--fundo:#f4f8fc;--card:#fff;--texto:#061b45;--borda:#dce6f2;max-width:1760px;margin:0 auto 30px;padding:18px 28px 24px;background:linear-gradient(180deg,#fff 0%,#f4f8fc 100%);color:var(--texto);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.22);font-family:Arial,Helvetica,sans-serif}
+    .painel-depatri *{box-sizing:border-box}
+    .painel-loading{opacity:.55;pointer-events:none}
+    .pd-topo{position:relative;display:grid;grid-template-columns:220px 1fr 520px;align-items:center;gap:18px;min-height:255px;overflow:hidden}
+    .pd-topo:before{content:"";position:absolute;left:-2px;top:-4px;width:150px;height:150px;background-image:radial-gradient(#0d3f91 2.2px,transparent 2.2px);background-size:13px 13px;opacity:.85}
+    .pd-brasao{position:relative;z-index:2;width:160px;height:205px;justify-self:center;display:flex;align-items:center;justify-content:center}
+    .pd-brasao img{width:100%;height:100%;object-fit:contain}
+    .pd-brasao-fallback{width:150px;height:180px;border-radius:45% 45% 52% 52%;background:linear-gradient(180deg,#e8c760,#b98b20);border:3px solid #9d7415;color:#111;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:900;font-size:22px;line-height:1.1;box-shadow:0 4px 12px rgba(0,0,0,.16)}
+    .pd-titulo-area{position:relative;z-index:2;min-width:0}
+    .pd-departamento{font-size:32px;font-weight:950;color:var(--azul);text-transform:uppercase;letter-spacing:-.8px;line-height:1.05;white-space:normal}
+    .pd-depatri{font-size:108px;line-height:.88;font-weight:950;color:var(--azul);letter-spacing:3px;margin:8px 0 0}
+    .pd-delegacia{font-size:31px;font-weight:900;color:var(--azul);margin-top:10px;line-height:1.12;white-space:normal;overflow-wrap:anywhere}
+    .pd-legenda{font-size:21px;color:#444;font-style:italic;margin-top:7px}
+    .pd-predio{position:relative;height:245px;border-radius:0 0 0 50px;overflow:hidden;background:linear-gradient(135deg,#cfe8ff,#0c4677)}
+    .pd-predio img{width:100%;height:100%;object-fit:cover}
+    .pd-predio:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.35) 36%,rgba(255,255,255,0) 100%)}
+    .pd-predio-fallback{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:22px;color:white;font-size:23px;font-weight:900;letter-spacing:2px;background:linear-gradient(135deg,#d9ecff 0%,#2d6e9d 50%,#06244a 100%)}
+
+
+    .pd-resumo{display:grid;grid-template-columns:1.18fr .72fr .78fr;background:var(--card);border:1px solid var(--borda);border-radius:16px;box-shadow:0 7px 20px rgba(8,43,102,.13);margin-top:10px;overflow:hidden}
+    .pd-resumo-bloco{padding:26px 32px;min-height:150px;display:flex;align-items:center;gap:25px;border-right:2px solid #c8dbf2}
+    .pd-resumo-bloco:last-child{border-right:none}
+    .pd-icone-analise{font-size:78px;color:var(--azul);min-width:110px;text-align:center;line-height:1}
+    .pd-texto-institucional{font-size:27px;font-weight:900;line-height:1.22;color:var(--azul)}
+    .pd-total-box{justify-content:center;text-align:center;flex-direction:column;gap:4px}
+    .pd-rotulo{font-size:22px;font-weight:950;color:var(--azul);text-transform:uppercase;line-height:1}
+    .pd-numero-total{font-size:72px;font-weight:950;color:var(--azul);line-height:1;border:2px solid var(--azul);border-radius:10px;padding:5px 35px;min-width:300px}
+    .pd-evolucao-total{justify-content:center;color:var(--verde)}
+    .pd-evolucao-total.negativo{color:var(--vermelho)}
+    .pd-icone-evolucao{font-size:78px;line-height:1}
+    .pd-valor-evolucao{font-size:62px;font-weight:950;line-height:.94;white-space:nowrap}
+    .pd-periodo{font-size:26px;font-weight:900;color:var(--azul);margin-top:4px}
+    .pd-sem-comparativo{font-size:34px!important;letter-spacing:4px}
+
+
+    .pd-cards{display:grid;gap:14px;margin-top:14px}
+    .pd-cards.qtd-1{grid-template-columns:minmax(450px, 980px);justify-content:center;margin-top:16px}
+    .pd-cards.qtd-2{grid-template-columns:repeat(2,minmax(360px,520px));justify-content:center}
+    .pd-cards.qtd-3{grid-template-columns:repeat(3,1fr)}
+    .pd-cards.qtd-4{grid-template-columns:repeat(4,1fr)}
+    .pd-cards.qtd-5{grid-template-columns:repeat(5,1fr)}
+    .pd-card{background:var(--card);border:1px solid var(--borda);border-radius:16px;padding:20px 20px 14px;min-height:245px;box-shadow:0 7px 20px rgba(8,43,102,.11);display:grid;grid-template-rows:1fr auto;align-content:space-between}
+    .pd-card.qtd-unica{min-height:255px;max-width:990px;grid-template-columns:230px 1fr;align-items:center;padding:24px 34px;column-gap:30px}
+    .pd-card-top{display:grid;grid-template-columns:118px 1fr;gap:15px;align-items:start;min-width:0}
+    .pd-card.qtd-unica .pd-card-top{grid-template-columns:180px 1fr;align-items:center}
+    .pd-crime-icone{width:108px;height:108px;border-radius:50%;border:2px solid #97c8ff;display:flex;align-items:center;justify-content:center;font-size:48px;color:var(--azul);background:#fafdff;flex-shrink:0}
+    .pd-card.qtd-unica .pd-crime-icone{width:170px;height:170px;font-size:74px}
+    .pd-crime-content{min-width:0}
+    .pd-crime-nome{font-size:21px;font-weight:950;text-transform:uppercase;color:var(--azul);line-height:1.08;overflow-wrap:anywhere;word-break:normal;hyphens:auto;text-align:left}
+    .pd-card.qtd-unica .pd-crime-nome{font-size:28px;text-align:center}
+    .pd-crime-qtd{font-size:62px;font-weight:950;color:var(--azul);line-height:.95;margin-top:8px;text-align:left}
+    .pd-card.qtd-unica .pd-crime-qtd{font-size:94px;text-align:center}
+    .pd-linha-card{height:2px;background:#9ccaff;margin:14px 0 10px;grid-column:1/-1}
+    .pd-card-bottom{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;grid-column:1/-1;text-align:center}
+    .pd-card-bottom>div:first-child{border-right:2px solid #b7d7f6}
+    .pd-mini-label{font-size:15px;font-weight:950;color:var(--azul);text-transform:uppercase;margin-bottom:6px}
+    .pd-anterior{font-size:32px;font-weight:950;color:var(--azul);line-height:1}
+    .pd-evol-card{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:32px;font-weight:950;color:var(--verde);white-space:nowrap;line-height:1}
+    .pd-evol-card.negativo{color:var(--vermelho)}
+    .pd-evol-card.sem-comp{font-size:18px;color:var(--azul);white-space:normal;line-height:1.1}
+
+
+
+    .pd-cards-drf{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:14px}
+    .pd-card-drf{background:var(--card);border:1px solid var(--borda);border-radius:16px;padding:18px;min-height:310px;box-shadow:0 7px 20px rgba(8,43,102,.11);display:flex;flex-direction:column}
+    .pd-card-drf-head{display:flex;align-items:center;gap:12px;padding-bottom:13px;border-bottom:2px solid #9ccaff;min-height:76px}
+    .pd-card-drf-icon{width:58px;height:58px;border-radius:50%;border:2px solid #97c8ff;display:flex;align-items:center;justify-content:center;font-size:27px;color:var(--azul);background:#fafdff;flex:0 0 auto}
+    .pd-card-drf-title{font-size:18px;font-weight:950;text-transform:uppercase;color:var(--azul);line-height:1.08;overflow-wrap:anywhere}
+    .pd-card-drf-metricas{display:grid;gap:10px;margin-top:12px;flex:1;align-content:stretch}
+    .pd-card-drf-metrica{background:#f8fbff;border:1px solid #dbe9f8;border-radius:11px;padding:10px 11px;display:flex;flex-direction:column;justify-content:space-between;min-height:92px}
+    .pd-cards-drf>.pd-card-drf-metrica{min-height:155px;box-shadow:0 4px 12px rgba(8,43,102,.08)}
+    @media print{.pd-contador-acoes,.pd-admin-box{display:none!important}.pd-cards-drf{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.pd-cards-drf>.pd-card-drf-metrica{break-inside:avoid;min-height:110px;padding:7px}}
+    .pd-card-drf-label{font-size:12px;font-weight:950;color:var(--azul);text-transform:uppercase;line-height:1.12;min-height:27px;display:flex;align-items:flex-start;gap:5px}
+    .pd-card-drf-label-text{min-width:0;flex:1;overflow-wrap:anywhere}
+    .pd-contador-acoes{display:inline-flex;flex:0 0 auto;align-items:center;gap:1px;margin-top:-3px}
+    .pd-contador-edit-btn,.pd-contador-select-btn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:6px;background:transparent;color:#55749b;font-size:10px;line-height:1;opacity:.62;cursor:pointer;transition:opacity .15s ease,background .15s ease,color .15s ease}
+    .pd-contador-edit-btn:hover,.pd-contador-edit-btn:focus,.pd-contador-select-btn:hover,.pd-contador-select-btn:focus{opacity:1;background:#e1edfa;color:#082b66;outline:none}
+    .pd-contador-edit-btn:focus-visible,.pd-contador-select-btn:focus-visible{box-shadow:0 0 0 2px rgba(13,63,145,.25)}
+    .pd-contador-popover{position:fixed;z-index:2147482000;width:min(430px,calc(100vw - 24px));padding:12px;border:1px solid #aac8e8;border-radius:12px;background:#fff;color:#061b45;box-shadow:0 18px 55px rgba(0,0,0,.32)}
+    .pd-contador-popover-topo{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;font-size:13px;font-weight:950;color:#082b66}
+    .pd-contador-popover-fechar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border:0;border-radius:7px;background:#edf4fc;color:#082b66;cursor:pointer}
+    .pd-contador-opcoes{max-height:min(430px,60vh);overflow-y:auto;padding:2px 5px 4px 2px;scrollbar-width:thin;overscroll-behavior:contain}
+    .pd-contador-grupo{padding:7px 0 9px;border-bottom:1px solid #dce8f5}
+    .pd-contador-grupo:last-child{border-bottom:0}
+    .pd-contador-grupo-titulo{padding:0 7px 5px;font-size:10px;font-weight:950;letter-spacing:.25px;color:#52709a;text-transform:uppercase}
+    .pd-contador-grupo-lista{display:grid;gap:4px}
+    .pd-contador-opcao{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;padding:8px 9px;border:1px solid transparent;border-radius:8px;background:#f7faff;color:#082b66;text-align:left;font-size:12px;font-weight:850;line-height:1.2;cursor:pointer}
+    .pd-contador-opcao:hover,.pd-contador-opcao:focus{border-color:#8ab8ea;background:#eaf4ff;outline:none}
+    .pd-contador-opcao.ativo{border-color:#0d3f91;background:#dfeeff;color:#061b45}
+    .pd-contador-opcao.ativo:after{content:'ATUAL';flex:0 0 auto;font-size:8px;font-weight:950;color:#0d3f91}
+    .pd-contador-opcao:disabled{opacity:.55;cursor:wait}
+    .pd-contador-popover-status{min-height:18px;margin-top:7px;font-size:11px;color:#52709a}
+    .pd-card-drf-valor{font-size:34px;font-weight:950;color:var(--azul);line-height:1;margin:4px 0 7px;overflow-wrap:anywhere}
+    .pd-card-drf-valor.tipo-moeda{font-size:24px;line-height:1.06}
+    .pd-card-drf-valor.tipo-peso{font-size:30px}
+    .pd-card-drf-comp{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:7px;border-top:1px solid #bdd8f3;color:var(--azul)}
+    .pd-card-drf-comp>div:last-child{border-left:1px solid #bdd8f3;padding-left:8px}
+    .pd-card-drf-mini{font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.2px}
+    .pd-card-drf-mini-valor{font-size:14px;font-weight:950;line-height:1.15;margin-top:2px}
+    .pd-card-drf-evolucao{color:var(--verde)}
+    .pd-card-drf-evolucao.negativo{color:var(--vermelho)}
+    .pd-card-drf-evolucao.sem-comp{font-size:11px;color:var(--azul)}
+
+    .pd-faixa{display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border:1px solid var(--borda);border-radius:16px;box-shadow:0 7px 20px rgba(8,43,102,.10);margin-top:14px;padding:20px 18px}
+    .pd-valor-item{display:grid;grid-template-columns:92px 1fr;gap:16px;align-items:center;padding:0 18px;border-right:2px solid #c8dbf2}
+    .pd-valor-item:last-child{border-right:none}
+    .pd-valor-icone{width:76px;height:76px;border-radius:50%;background:var(--azul);color:white;display:flex;align-items:center;justify-content:center;font-size:34px}
+    .pd-valor-titulo{font-size:22px;line-height:1.08;font-weight:950;color:var(--azul);text-transform:uppercase}
+    .pd-valor-texto{font-size:15px;line-height:1.25;color:var(--texto);margin-top:8px}
+    .pd-rodape{display:flex;justify-content:center;align-items:center;gap:18px;margin-top:20px;font-size:22px;font-weight:950;color:var(--azul);text-transform:uppercase;text-align:center}
+    .pd-rodape:before,.pd-rodape:after{content:"";height:2px;width:320px;background:var(--verde);opacity:.78}
+
+
+    .pd-admin-box{background:#fff;border:1px solid #dce6f2;border-radius:14px;padding:14px;margin:12px 0 16px;box-shadow:0 5px 18px rgba(8,43,102,.10);color:#061b45}
+    .pd-admin-box input,.pd-admin-box select{background:#fff!important;color:#061b45!important;border:1px solid #c7d9ef!important}
+    .pd-estatisticas-aviso{margin-top:14px;padding:34px 24px;border:2px solid #d92d20;border-radius:16px;background:#fff4f2;color:#b42318;text-align:center;font-size:30px;font-weight:950;letter-spacing:1px;text-transform:uppercase;box-shadow:0 7px 20px rgba(180,35,24,.12)}
+    .pd-estatisticas-aviso small{display:block;margin-top:8px;font-size:15px;letter-spacing:0;color:#7a271a;text-transform:none}
+    .pd-selector-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .pd-selector-slot{padding:12px;border:1px solid #dce6f2;border-radius:12px;background:#f8fbff}
+    .pd-selector-slot label{font-weight:900;color:#082b66;margin-bottom:6px}
+    .pd-selector-custom{display:grid;gap:9px;margin-top:12px;padding-top:12px;border-top:1px solid #d6e5f5}
+    .pd-selector-custom-titulo{font-size:11px;font-weight:950;color:#52709a;text-transform:uppercase;letter-spacing:.35px}
+    .pd-selector-custom-campo label{display:block;font-size:11px;margin-bottom:4px;color:#082b66}
+    .pd-selector-custom-campo input{font-size:13px;font-weight:750}
+    .pd-selector-custom-metricas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+
+
+
+    @media(max-width:1500px){.pd-cards-drf{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:1100px){.pd-cards-drf{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:760px){.pd-cards-drf{grid-template-columns:1fr}.pd-card-drf{min-height:auto}.pd-card-drf-title{font-size:17px}.pd-selector-grid,.pd-selector-custom-metricas{grid-template-columns:1fr}}
+
+    @media print{body{background:#fff!important}.navbar,.dashboard-top-filter-card,#dashMetaAtualizacao,#dashEditorDepatri,.pd-admin-actions{display:none!important}.painel-depatri{box-shadow:none;border-radius:0;max-width:none;padding:0}.container-fluid{padding:0!important}}
+    @media(max-width:1350px){.pd-topo{grid-template-columns:150px 1fr}.pd-predio{display:none}.pd-depatri{font-size:76px}.pd-departamento{font-size:25px}.pd-delegacia{font-size:24px}.pd-resumo{grid-template-columns:1fr}.pd-resumo-bloco{border-right:none;border-bottom:1px solid #c8dbf2}.pd-cards.qtd-4,.pd-cards.qtd-5{grid-template-columns:repeat(2,1fr)}.pd-cards.qtd-3{grid-template-columns:1fr}.pd-faixa{grid-template-columns:repeat(2,1fr);gap:18px}.pd-valor-item{border-right:none}.pd-rodape:before,.pd-rodape:after{width:120px}}
+    @media(max-width:760px){.painel-depatri{padding:14px}.pd-topo{grid-template-columns:1fr;text-align:center}.pd-brasao{justify-self:center}.pd-depatri{font-size:56px}.pd-departamento{font-size:20px}.pd-delegacia{font-size:20px}.pd-texto-institucional{font-size:19px}.pd-icone-analise{font-size:50px;min-width:60px}.pd-numero-total{font-size:48px;min-width:auto}.pd-cards,.pd-cards.qtd-1,.pd-cards.qtd-2,.pd-cards.qtd-3,.pd-cards.qtd-4,.pd-cards.qtd-5{grid-template-columns:1fr}.pd-card.qtd-unica{grid-template-columns:1fr}.pd-faixa{grid-template-columns:1fr}.pd-rodape{font-size:16px}.pd-rodape:before,.pd-rodape:after{display:none}}
+
+    /* Painel executivo: tipografia, densidade e hierarquia visual. */
+    .painel-depatri{--azul:#132c48;--verde:#147d64;--vermelho:#b54747;--borda:#e1e7ee;background:#f4f6f9;border:1px solid #e1e7ee;border-radius:18px;padding:24px;font-family:Inter,"Segoe UI",Arial,sans-serif;box-shadow:0 12px 32px rgba(16,35,58,.10)}
+    .painel-depatri .pd-topo{grid-template-columns:64px 1fr;gap:18px;min-height:110px;padding:0 0 22px;border-bottom:1px solid #dbe2ea;text-align:left}
+    .painel-depatri .pd-topo:before,.painel-depatri .pd-predio{display:none}
+    .painel-depatri .pd-brasao{width:58px;height:76px}
+    .painel-depatri .pd-brasao-fallback{width:54px;height:68px;font-size:10px;border-width:1px}
+    .painel-depatri .pd-departamento{font-size:10px;line-height:1.5;letter-spacing:1.5px;font-weight:650;color:#65758a}
+    .painel-depatri .pd-depatri{font-size:30px;letter-spacing:1px;line-height:1.1;margin:5px 0}
+    .painel-depatri .pd-delegacia{font-size:15px;font-weight:600;margin:0;line-height:1.4}
+    .painel-depatri .pd-legenda{font-size:11px;font-style:normal;color:#6d7c8d;margin-top:5px}
+    .painel-depatri .pd-resumo{grid-template-columns:1.1fr 1fr 1fr;margin:20px 0;background:#142e49;border:0;box-shadow:none;border-radius:12px;color:white}
+    .painel-depatri .pd-resumo-bloco{padding:20px 24px;min-height:100px;gap:16px;border:0;border-right:1px solid #34506b}
+    .painel-depatri .pd-resumo-bloco:last-child{border:0}
+    .painel-depatri .pd-texto-institucional{font-size:19px;font-weight:600;color:#fff;line-height:1.35}
+    .painel-depatri .pd-texto-institucional small{display:block;font-size:11px;font-weight:400;color:#bdcbd9;margin-top:5px}
+    .painel-depatri .pd-icone-analise{font-size:26px;min-width:26px;color:#b9cddd}
+    .painel-depatri .pd-rotulo{font-size:10px;font-weight:600;letter-spacing:1px;color:#bdcbd9}
+    .painel-depatri .pd-numero-total{font-size:40px;font-weight:700;min-width:0;border:0;padding:0;color:#fff;font-variant-numeric:tabular-nums}
+    .painel-depatri .pd-icone-evolucao{display:none}
+    .painel-depatri .pd-valor-evolucao{font-size:30px;color:#fff;font-weight:650;line-height:1.2}
+    .painel-depatri .pd-periodo{font-size:11px;color:#bdcbd9;line-height:1.5}
+    .painel-depatri .pd-cards-drf{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+    .painel-depatri .pd-cards-drf>.pd-card-drf-metrica{background:#fff;border:1px solid #dfe6ee;border-radius:12px;min-height:174px;padding:17px 18px;box-shadow:0 2px 3px rgba(20,46,73,.025);transition:border-color .15s}
+    .painel-depatri .pd-cards-drf>.pd-card-drf-metrica:hover{border-color:#9aacbf}
+    .painel-depatri .pd-card-drf-label{font-size:11px;font-weight:600;line-height:1.45;min-height:34px;letter-spacing:.2px;color:#53657a}
+    .painel-depatri .pd-card-drf-valor{font-size:36px;font-weight:650;letter-spacing:-1px;margin:10px 0 16px;line-height:1.1;font-variant-numeric:tabular-nums}
+    .painel-depatri .pd-card-drf-valor.tipo-moeda{font-size:25px;letter-spacing:-.7px}
+    .painel-depatri .pd-card-drf-comp{border-color:#edf0f4;padding-top:10px;gap:8px}
+    .painel-depatri .pd-card-drf-comp>div:last-child{border:0;padding-left:4px}
+    .painel-depatri .pd-card-drf-mini{font-size:8px;line-height:1.4;letter-spacing:.4px;font-weight:600;color:#7a8898}
+    .painel-depatri .pd-card-drf-mini-valor{font-size:13px;font-weight:600;margin-top:4px}
+    .painel-depatri .pd-card-drf-evolucao{display:inline-block;border-radius:5px;background:#eaf6f0;padding:3px 5px;font-size:11px}
+    .painel-depatri .pd-card-drf-evolucao.negativo{background:#fcf0ee}
+    .painel-depatri .pd-card-drf-evolucao.sem-comp{background:#f1f4f7;color:#748194;font-size:9px}
+    .painel-depatri .pd-contador-select-btn{width:25px;height:25px;opacity:1;background:#f1f5f9;color:#526a83;border:1px solid #e0e7ef;font-size:11px}
+    .painel-depatri .pd-rodape{justify-content:space-between;font-size:9px;font-weight:500;color:#7a8998;letter-spacing:.6px;margin-top:20px;padding-top:14px;border-top:1px solid #dfe6ee}
+    .painel-depatri .pd-rodape:before,.painel-depatri .pd-rodape:after{display:none}
+    .pd-apresentacao-sair{display:none}
+    .painel-depatri.pd-apresentando{position:fixed;inset:0;z-index:2147481000;max-width:none;margin:0;border-radius:0;overflow:auto;padding:28px 40px}
+    .pd-apresentando .pd-contador-acoes{display:none}
+    .pd-apresentando .pd-apresentacao-sair{display:block;position:fixed;right:24px;top:16px;border:1px solid #cdd7e2;background:#fff;border-radius:8px;padding:8px 12px;color:#233b55;cursor:pointer;font:12px "Segoe UI",sans-serif}
+    @media(max-width:1050px){.painel-depatri .pd-cards-drf{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:760px){.painel-depatri{padding:16px}.painel-depatri .pd-cards-drf{grid-template-columns:repeat(2,minmax(0,1fr))}.painel-depatri .pd-resumo{grid-template-columns:1fr 1fr}.painel-depatri .pd-resumo-bloco:first-child{display:none}.painel-depatri .pd-departamento{font-size:8px}.painel-depatri .pd-resumo-bloco{padding:14px}.painel-depatri.pd-apresentando{padding:18px}}
+    @media(max-width:440px){.painel-depatri .pd-cards-drf{grid-template-columns:1fr}}
+    @media print{.painel-depatri,.painel-depatri.pd-apresentando{position:static;overflow:visible;padding:0;background:white;border:0;box-shadow:none}.pd-apresentacao-sair{display:none!important}.painel-depatri .pd-cards-drf{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.painel-depatri .pd-cards-drf>.pd-card-drf-metrica{min-height:135px;padding:10px;break-inside:avoid}.painel-depatri .pd-card-drf-valor{font-size:28px}.painel-depatri .pd-resumo{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+
+    .drd-periodo{font-size:12px;border:1px solid #57503a;border-radius:7px;padding:7px 12px;color:#e0c45d;background:#302c20}
+    .drd-tabela{width:100%;border-collapse:collapse;color:#f0f2f5;min-width:680px}
+    .drd-tabela thead th{font-size:11px;font-weight:600;color:#b9bdc5;padding:14px 12px;border-bottom:1px solid #484848;text-align:center}
+    .drd-tabela thead th:first-child{text-align:left;width:36%}
+    .drd-tabela tbody th{padding:16px 12px;text-align:left;border-bottom:1px solid #343434;font-size:13px}
+    .drd-tabela tbody th small{display:block;font-size:10px;color:#a9afb9;font-weight:400;margin-top:4px}
+    .drd-tabela td{text-align:center;padding:12px;border-bottom:1px solid #343434}
+    .drd-numero{display:inline-block;min-width:48px;font-size:23px;font-weight:650;font-variant-numeric:tabular-nums}
+    .drd-tabela tbody tr:hover{background:rgba(212,175,55,.04)}
+    @media print{.drd-tabela{min-width:0;color:#111}.drd-tabela th,.drd-tabela td{color:#111!important}.drd-tabela tbody tr{break-inside:avoid}.drd-tabela tbody th small,.drd-tabela thead th{color:#444}.drd-numero{font-size:17px}}
+  `;
+  document.head.appendChild(style);
+}
+
+
+function montarEstruturaDashboardPortal() {
+  var container = document.getElementById('modDashboard');
+  if (!container) return;
+  if (container.getAttribute('data-dashboard-ready') === '1') return;
+
+
+  injetarCssDashboardDepatri_();
+  container.setAttribute('data-dashboard-ready', '1');
+  container.innerHTML = ''
+    + '<div class="dashboard-header d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">'
+    + '  <div>'
+    + '    <h3 class="card-header-gold pb-2 mb-1"><i class="fas fa-chart-line"></i> Dashboard DEPATRI</h3>'
+    + '    <div class="text-muted small">Painel geral e painéis específicos por escopo de delegacia.</div>'
+    + '  </div>'
+    + '  <div class="d-flex flex-wrap gap-2">'
+    + '    <button class="btn btn-outline-warning" type="button" onclick="carregarDadosDashboardPortal(true)"><i class="fas fa-rotate"></i> Atualizar</button>'
+    + '    <button class="btn btn-outline-light" type="button" onclick="window.print()"><i class="fas fa-print"></i> Imprimir/PDF</button>'
+    + '  </div>'
+    + '</div>'
+
+
+    + '<div class="dashboard-top-filter-card p-3 mb-4">'
+    + '  <div class="row g-3 align-items-end">'
+    + '    <div class="col-lg-3 col-md-6">'
+    + '      <label class="form-label">Visão do painel</label>'
+    + '      <select id="dashVisao" class="form-select" onchange="onChangeVisaoDashboardPortal()"><option value="GERAL">GERAL</option></select>'
+    + '    </div>'
+    + '    <div class="col-lg-3 col-md-6" id="dashDelegaciaWrap">'
+    + '      <label class="form-label">Delegacia</label>'
+    + '      <select id="dashDelegacia" class="form-select" onchange="carregarDadosDashboardPortal()"></select>'
+    + '    </div>'
+    + '    <div class="col-lg-3 col-md-6">'
+    + '      <label class="form-label">Mês</label>'
+    + '      <select id="dashMes" class="form-select" onchange="carregarDadosDashboardPortal()"></select>'
+    + '    </div>'
+    + '    <div class="col-lg-3 col-md-6">'
+    + '      <label class="form-label">Ano</label>'
+    + '      <select id="dashAno" class="form-select" onchange="carregarDadosDashboardPortal()"></select>'
+    + '    </div>'
+    + '  </div>'
+    + '  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">'
+    + '    <div id="dashInfoAcesso" class="small text-warning"></div>'
+    + '    <div id="dashMetaAtualizacao" class="small text-muted"></div>'
+    + '  </div>'
+    + '</div>'
+
+
+    + '<div id="dashLoading" class="card card-depatri p-4 text-center text-muted mb-4" style="display:none;"><i class="fas fa-spinner fa-spin me-2"></i>Carregando dashboard...</div>'
+    + '<div id="dashEditorDepatri" style="display:none;"></div>'
+    + '<div id="dashGeralArea"></div>'
+    + '<div id="dashDepatriArea" style="display:none;"></div>';
+
+
+  montarEstruturaGeralDashboardPortal();
+}
+
+
+function montarEstruturaGeralDashboardPortal() {
+  var area = document.getElementById('dashGeralArea');
+  if (!area) return;
+  area.innerHTML = ''
+    + '<div id="dashLinha1" class="row g-3 mb-3"></div>'
+    + '<div id="dashLinha2" class="row g-3 mb-3"></div>'
+    + '<div id="dashLinha3" class="row g-3 mb-4"></div>'
+    + '<section id="dashRelatoriosDelegacias" class="card card-depatri p-3 mb-4" aria-label="Relatórios por delegacia"></section>'
+
+
+    + '<div class="row g-4">'
+    + '  <div class="col-12 col-xl-6"><div class="card card-depatri p-3"><div class="dashboard-chart-title">Apreensões por tipo</div><div id="chartApreensoes" class="dashboard-chart"></div></div></div>'
+    + '  <div class="col-12 col-xl-6"><div class="card card-depatri p-3"><div class="dashboard-chart-title">Valor de Fios e Relacionados — Comparativo 2025 x 2026</div><div id="chartFiosComparativo" class="dashboard-chart"></div></div></div>'
+    + '  <div class="col-12 col-xl-6"><div class="card card-depatri p-3"><div class="dashboard-chart-title">Inquéritos por tipo de crime</div><div id="chartInqueritos" class="dashboard-chart"></div></div></div>'
+    + '  <div class="col-12 col-xl-6"><div class="card card-depatri p-3"><div class="dashboard-chart-title">Representações por tipo</div><div id="chartRepresentacoes" class="dashboard-chart"></div></div></div>'
+    + '  <div class="col-12 col-xl-6"><div class="card card-depatri p-3"><div class="dashboard-chart-title">Indiciamentos</div><div id="chartIndiciamentos" class="dashboard-chart"></div></div></div>'
+    + '  <div class="col-12 col-xl-6"><div class="card card-depatri p-3"><div class="dashboard-chart-title">Prisões por delegacia</div><div id="chartPrisoesDelegacia" class="dashboard-chart"></div></div></div>'
+    + '  <div class="col-12 col-xl-6"><div class="card card-depatri p-3"><div class="dashboard-chart-title">Prisões por modalidade</div><div id="chartPrisoesModalidade" class="dashboard-chart"></div></div></div>'
+    + '  <div class="col-12 col-xl-6"><div class="card card-depatri p-3"><div class="dashboard-chart-title">Prisões por tipo penal principal</div><div id="chartPrisoesTipoPenal" class="dashboard-chart"></div></div></div>'
+    + '  <div class="col-12 col-xl-6"><div class="card card-depatri p-3"><div class="dashboard-chart-title">Prisões ao longo do tempo</div><div id="chartPrisoesTempo" class="dashboard-chart"></div></div></div>'
+    + '  <div class="col-12 col-xl-4"><div class="card card-depatri p-3"><div class="dashboard-chart-title">Demandas evoluídas x não evoluídas</div><div id="chartDemandasEvolucao" class="dashboard-chart chart-sm"></div></div></div>'
+    + '  <div class="col-12 col-xl-4"><div class="card card-depatri p-3"><div class="dashboard-chart-title">Status operacional das demandas</div><div id="chartDemandasStatus" class="dashboard-chart chart-sm"></div></div></div>'
+    + '  <div class="col-12 col-xl-4"><div class="card card-depatri p-3"><div class="dashboard-chart-title">Equipes com mais produção</div><div id="chartEquipes" class="dashboard-chart chart-sm"></div></div></div>'
+    + '</div>'
+
+
+    + '<div class="card card-depatri p-3 mt-4">'
+    + '  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">'
+    + '    <div><div class="dashboard-chart-title mb-1">Tabela analítica final</div><div class="small text-muted">Resumo operacional unificado de produtividade, demandas e prisões.</div></div>'
+    + '    <div class="d-flex gap-2"><input type="text" id="dashFiltroTabela" class="form-control" style="min-width:260px;" placeholder="Filtrar tabela..." oninput="filtrarTabelaDashboardPortal()"></div>'
+    + '  </div>'
+    + '  <div id="dashResumoTabela" class="small text-muted mb-2"></div>'
+    + '  <div class="table-responsive"><table class="table table-dark table-striped table-hover align-middle dashboard-table">'
+    + '    <thead><tr><th>Data</th><th>Delegacia</th><th>Ano</th><th>Mês</th><th>Tipo de dado</th><th>Categoria principal</th><th>Subcategoria</th><th>Quantidade</th><th>Valor</th><th>Equipe</th><th>Status</th><th>Procedimento</th></tr></thead>'
+    + '    <tbody id="dashTabelaBody"><tr><td colspan="12" class="text-center text-muted">Carregando dados...</td></tr></tbody>'
+    + '  </table></div>'
+    + '</div>';
+}
+
+
+function carregarBootstrapDashboardPortal() {
+  if (!usuarioAtual) return;
+  mostrarLoadingDashboardPortal(true);
+
+
+  google.script.run
+    .withSuccessHandler(function(ret) {
+      preencherFiltrosDashboardPortal(ret || {});
+      carregarConfigPainelDepatriPortal_();
+    })
+    .withFailureHandler(function(err) {
+      mostrarLoadingDashboardPortal(false);
+      alert((err && err.message) || err || 'Erro ao carregar configuração inicial do dashboard.');
+    })
+    .obterDashboardBootstrap(usuarioAtual.login);
+}
+
+
+function carregarConfigPainelDepatriPortal_() {
+  google.script.run
+    .withSuccessHandler(function(ret) {
+      DASHBOARD_PORTAL_STATE.bootstrapped = true;
+      DASHBOARD_PORTAL_STATE.painelConfig = ret || {};
+      DASHBOARD_PORTAL_STATE.painelCanEdit = !!(ret && ret.podeEditar);
+      preencherVisoesDashboardPortal(ret || {});
+      sincronizarFiltrosDashboardComAcesso();
+      carregarDadosDashboardPortal(true);
+    })
+    .withFailureHandler(function(err) {
+      DASHBOARD_PORTAL_STATE.bootstrapped = true;
+      mostrarLoadingDashboardPortal(false);
+      alert((err && err.message) || err || 'Erro ao carregar configurações do Painel DEPATRI.');
+    })
+    .obterDashboardDepatriConfig(usuarioAtual.login);
+}
+
+
+function preencherFiltrosDashboardPortal(ret) {
+  var selDelegacia = document.getElementById('dashDelegacia');
+  var selMes = document.getElementById('dashMes');
+  var selAno = document.getElementById('dashAno');
+  if (!selDelegacia || !selMes || !selAno) return;
+
+
+  var htmlDelegacias = '<option value="">Todas</option>';
+  (ret.delegacias || []).forEach(function(item) { htmlDelegacias += '<option value="' + escDashboard(item) + '">' + escDashboard(item) + '</option>'; });
+
+
+  var htmlMeses = '<option value="">Todos</option>';
+  (ret.meses || []).forEach(function(item) { htmlMeses += '<option value="' + escDashboard(item) + '">' + escDashboard(item) + '</option>'; });
+
+
+  var htmlAnos = '<option value="">Todos</option>';
+  (ret.anos || []).forEach(function(item) { htmlAnos += '<option value="' + escDashboard(item) + '">' + escDashboard(item) + '</option>'; });
+
+
+  selDelegacia.innerHTML = htmlDelegacias;
+  selMes.innerHTML = htmlMeses;
+  selAno.innerHTML = htmlAnos;
+
+
+  var anoAtual = String(new Date().getFullYear());
+  if ([].slice.call(selAno.options).some(function(o) { return o.value === anoAtual; })) selAno.value = anoAtual;
+
+
+  selDelegacia.setAttribute('data-classe', ret.classeAcesso || '');
+  selDelegacia.setAttribute('data-fixada', ret.delegaciaFixada || '');
+  selDelegacia.setAttribute('data-equipe-fixada', ret.equipeFixada || '');
+}
+
+
+function preencherVisoesDashboardPortal(ret) {
+  var sel = document.getElementById('dashVisao');
+  if (!sel) return;
+  var atual = sel.value || 'GERAL';
+  var html = '';
+  (ret.visoes || [{ chave: 'GERAL', nome: 'Geral – Dashboard Operacional' }]).forEach(function(v) {
+    html += '<option value="' + escDashboard(v.chave) + '">' + escDashboard(v.nome) + '</option>';
+  });
+  sel.innerHTML = html;
+  sel.value = atual && [].slice.call(sel.options).some(function(o) { return o.value === atual; }) ? atual : 'GERAL';
+}
+
+
+function onChangeVisaoDashboardPortal() {
+  sincronizarFiltrosDashboardComAcesso();
+  carregarDadosDashboardPortal(true);
+}
+
+
+function sincronizarFiltrosDashboardComAcesso() {
+  var selVisao = document.getElementById('dashVisao');
+  var selDelegacia = document.getElementById('dashDelegacia');
+  var wrapDelegacia = document.getElementById('dashDelegaciaWrap');
+  var editor = document.getElementById('dashEditorDepatri');
+  if (!selDelegacia || !selVisao) return;
+
+
+  var visao = selVisao.value || 'GERAL';
+  DASHBOARD_PORTAL_STATE.visaoAtual = visao;
+  if (editor) { editor.style.display = 'none'; editor.innerHTML = ''; }
+
+
+  if (visao !== 'GERAL') {
+    if (wrapDelegacia) wrapDelegacia.style.display = 'none';
+    selDelegacia.disabled = true;
+    selDelegacia.value = '';
+    return;
+  }
+
+
+  if (wrapDelegacia) wrapDelegacia.style.display = '';
+  var classe = selDelegacia.getAttribute('data-classe') || '';
+  var fixada = selDelegacia.getAttribute('data-fixada') || '';
+
+
+  if (classe === 'PROPRIA' && fixada) {
+    selDelegacia.value = fixada;
+    selDelegacia.disabled = true;
+  } else if (classe === 'EQUIPE') {
+    selDelegacia.value = '';
+    selDelegacia.disabled = true;
+  } else {
+    selDelegacia.disabled = false;
+  }
+}
+
+
+function obterFiltrosDashboardPortal() {
+  return {
+    visao: ((document.getElementById('dashVisao') || {}).value || 'GERAL'),
+    delegacia: ((document.getElementById('dashDelegacia') || {}).value || ''),
+    mes: ((document.getElementById('dashMes') || {}).value || ''),
+    ano: ((document.getElementById('dashAno') || {}).value || '')
+  };
+}
+
+
+function erroConexaoTransitorioDashboardPortal_(err) {
+  var mensagem = String((err && err.message) || err || '');
+  return /HTTP\s*0|NetworkError|Failed to fetch|falha na conex[aã]o/i.test(mensagem);
+}
+
+function tratarFalhaCarregamentoDashboardPortal_(err, mensagemPadrao, tentativa) {
+  DASHBOARD_PORTAL_STATE.loading = false;
+  mostrarLoadingDashboardPortal(false);
+
+  var mensagem = String((err && err.message) || err || mensagemPadrao);
+  if (typeof console !== 'undefined' && console.error) {
+    console.error('[DEPATRI] Falha ao carregar o dashboard:', err || mensagem);
+  }
+
+  if (erroConexaoTransitorioDashboardPortal_(err) && Number(tentativa || 0) < 1) {
+    setTimeout(function() {
+      carregarDadosDashboardPortal(true, Number(tentativa || 0) + 1);
+    }, 900);
+    return;
+  }
+
+  alert(mensagem);
+}
+
+function carregarDadosDashboardPortal(forcar, tentativa) {
+  if (!usuarioAtual || DASHBOARD_PORTAL_STATE.loading) return;
+  if (!document.getElementById('modDashboard') || document.getElementById('modDashboard').style.display === 'none') return;
+
+
+  var filtros = obterFiltrosDashboardPortal();
+  DASHBOARD_PORTAL_STATE.loading = true;
+  mostrarLoadingDashboardPortal(true);
+
+
+  if (filtros.visao && filtros.visao !== 'GERAL') {
+    google.script.run
+      .withSuccessHandler(function(ret) {
+        DASHBOARD_PORTAL_STATE.loading = false;
+        mostrarLoadingDashboardPortal(false);
+        renderizarPainelDepatriPortal(ret || {});
+      })
+      .withFailureHandler(function(err) {
+        tratarFalhaCarregamentoDashboardPortal_(err, 'Erro ao carregar Painel DEPATRI.', tentativa);
+      })
+      .obterDashboardPainelDepatriDados(usuarioAtual.login, filtros);
+    return;
+  }
+
+
+  google.script.run
+    .withSuccessHandler(function(ret) {
+      DASHBOARD_PORTAL_STATE.loading = false;
+      mostrarLoadingDashboardPortal(false);
+      renderizarDashboardPortal(ret || {});
+    })
+    .withFailureHandler(function(err) {
+      tratarFalhaCarregamentoDashboardPortal_(err, 'Erro ao carregar dados do dashboard.', tentativa);
+    })
+    .obterDashboardDados(usuarioAtual.login, filtros);
+}
+
+
+function mostrarLoadingDashboardPortal(exibir) {
+  var box = document.getElementById('dashLoading');
+  if (box) box.style.display = exibir ? '' : 'none';
+  var painel = document.getElementById('painelDepatriWrapper');
+  if (painel) painel.classList.toggle('painel-loading', !!exibir);
+}
+
+
+// ============================================================================
+// VISÃO GERAL - DASHBOARD ORIGINAL
+// ============================================================================
+function renderizarDashboardPortal(ret) {
+  var geral = document.getElementById('dashGeralArea');
+  var depatri = document.getElementById('dashDepatriArea');
+  if (geral) geral.style.display = '';
+  if (depatri) depatri.style.display = 'none';
+
+
+  renderizarCardsDashboardPortal('dashLinha1', (ret.kpis && ret.kpis.linha1) || []);
+  renderizarCardsDashboardPortal('dashLinha2', (ret.kpis && ret.kpis.linha2) || []);
+  renderizarCardsDashboardPortal('dashLinha3', (ret.kpis && ret.kpis.linha3) || []);
+  renderRelatoriosDelegaciasDashboard_(ret.relatoriosPorDelegacia, ret.filtrosAplicados || {});
+
+
+  var meta = document.getElementById('dashMetaAtualizacao');
+  if (meta) {
+    var m = ret.meta || {};
+    meta.innerHTML = 'Atualizado em ' + escDashboard(m.atualizadoEm || '-') +
+      ' · Produtividade: ' + formatNumeroDashboard(m.totalProdutividade || 0, 0) +
+      ' · Demandas: ' + formatNumeroDashboard(m.totalDemandas || 0, 0) +
+      ' · Prisões: ' + formatNumeroDashboard(m.totalPrisoes || 0, 0) +
+      ' · Frontend <strong>' + escDashboard(DASHBOARD_JS_BUILD_ID) + '</strong>';
+  }
+
+
+  var graficos = ret.graficos || {};
+  renderChartApreensoes(graficos.apreensoesPorTipo || []);
+  renderChartFiosComparativo(graficos.fiosValorComparativo2025x2026 || { meses: [], serie2025: [], serie2026: [] });
+  renderChartInqueritos(graficos.inqueritosPorCrime || { instaurados: [], concluidos: [] });
+  renderChartRepresentacoes(graficos.representacoesPorTipo || []);
+  renderChartIndiciamentos(graficos.indiciamentosPorTipo || []);
+  renderChartPrisoesDelegacia(graficos.prisoesPorDelegacia || []);
+  renderChartPrisoesModalidade(graficos.prisoesPorModalidade || []);
+  renderChartPrisoesTipoPenal(graficos.prisoesPorTipoPenal || []);
+  renderChartPrisoesTempo(graficos.prisoesAoLongoDoTempo || []);
+  renderChartDemandasEvolucao(graficos.demandasEvoluidasVsNao || []);
+  renderChartDemandasStatus(graficos.statusDemandas || []);
+  renderChartEquipes(graficos.equipesProducao || []);
+
+
+  DASHBOARD_PORTAL_STATE.tabelaCompleta = ret.tabela || [];
+  filtrarTabelaDashboardPortal();
+  resizeChartsDashboardPortal();
+}
+
+
+
+function renderRelatoriosDelegaciasDashboard_(linhas, filtros) {
+  var box = document.getElementById('dashRelatoriosDelegacias');
+  if (!box) return;
+  var periodo = (filtros.mes || 'Todos os meses') + ' · ' + (filtros.ano || 'Todos os anos');
+  var html = '<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">'
+    + '<div><div class="dashboard-chart-title">Relatórios por delegacia</div>'
+    + '<div class="small" style="color:#b9bdc5">Quantitativos do período selecionado nos menus Mês e Ano.</div></div>'
+    + '<span class="drd-periodo">' + escDashboard(periodo) + '</span></div>';
+  if (!Array.isArray(linhas)) {
+    box.innerHTML = html + '<p>Atualize também o arquivo DASHBOARD.gs para carregar os quantitativos.</p>';
+    return;
+  }
+  html += '<div class="table-responsive"><table class="drd-tabela"><thead><tr><th scope="col">Delegacia</th>'
+    + '<th scope="col">Relatório técnico</th><th scope="col">Relatório de missão</th><th scope="col">Relatório de inteligência</th><th scope="col">RIF</th></tr></thead><tbody>';
+  linhas.forEach(function(linha) {
+    html += '<tr><th scope="row"><strong>' + escDashboard(linha.delegacia.replace('_', ' ')) + '</strong><small>' + escDashboard(linha.nome) + '</small></th>';
+    (linha.quantidades || []).forEach(function(qtd) {
+      html += '<td><span class="drd-numero">' + formatNumeroDashboard(qtd, 0) + '</span></td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  if (!linhas.length) html += '<p class="mt-3">Nenhuma das cinco unidades corresponde ao filtro de delegacia selecionado.</p>';
+  html += '<div class="small mt-2" style="color:#a9afb9">0 = nenhuma quantidade contabilizada no período e no escopo selecionados.</div>';
+  box.innerHTML = html;
+}
+
+function renderizarCardsDashboardPortal(containerId, cards) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+
+
+  var html = '';
+  (cards || []).forEach(function(card) {
+    html += ''
+      + '<div class="col-12 col-md-6 col-xl-2">'
+      + '  <div class="dashboard-kpi-card">'
+      + '    <div class="dashboard-kpi-icon"><i class="fas ' + escDashboard(card.icone || 'fa-chart-simple') + '"></i></div>'
+      + '    <div class="dashboard-kpi-title">' + escDashboard(card.titulo || '') + '</div>'
+      + '    <div class="dashboard-kpi-value">' + formatValorCardDashboard(card.valor, card.tipo) + '</div>'
+      + '  </div>'
+      + '</div>';
+  });
+  container.innerHTML = html;
+}
+
+
+// ============================================================================
+// VISÕES ESPECÍFICAS - INFOGRÁFICO DEPATRI
+// ============================================================================
+function renderizarPainelDepatriPortal(dados) {
+  fecharSeletorContadorDepatri_();
+  DASHBOARD_PORTAL_STATE.painelDados = dados || {};
+  var geral = document.getElementById('dashGeralArea');
+  var area = document.getElementById('dashDepatriArea');
+  if (geral) geral.style.display = 'none';
+  if (!area) return;
+  area.style.display = '';
+  destruirChartsDashboardPortal_();
+
+  var meta = document.getElementById('dashMetaAtualizacao');
+  if (meta) {
+    var m = dados.meta || {};
+    var versaoBackend = dados.versaoPainel || 'BACKEND SEM IDENTIFICADOR';
+    meta.innerHTML = 'Atualizado em ' + escDashboard(m.atualizadoEm || '-')
+      + ' · Frontend <strong>' + escDashboard(DASHBOARD_JS_BUILD_ID) + '</strong>'
+      + ' · Backend <strong>' + escDashboard(versaoBackend) + '</strong>';
+  }
+
+  var ehPainelProdutividade = dados.painelTipo === 'PRODUTIVIDADE_SELECIONAVEL' || dados.painelTipo === 'DRF_PRODUTIVIDADE';
+  var adminActions = '';
+  if (DASHBOARD_PORTAL_STATE.painelCanEdit) {
+    adminActions = '<div class="pd-admin-actions d-flex justify-content-end mb-2"><button class="btn btn-outline-primary btn-sm" onclick="abrirEditorPainelDepatri()"><i class="fas fa-sliders"></i> Organizar contadores</button></div>';
+  }
+
+  var evolTotalClasse = (Number(dados.evolucaoTotal || 0) < 0) ? 'negativo' : '';
+  var textoPeriodoComparativo = dados.comparativoTotalRotulo
+    ? 'vs. ' + escDashboard(String(dados.comparativoTotalRotulo).toLowerCase())
+    : (dados.periodo && dados.periodo.anterior
+      ? 'vs. mesmo período de ' + escDashboard(dados.periodo.anterior.ano || '')
+      : 'no período');
+  var evolTotalHtml = dados.temComparativoTotal
+    ? '<div class="pd-valor-evolucao">' + formatEvolucaoDepatri(dados.evolucaoTotal) + '</div><div class="pd-periodo">' + textoPeriodoComparativo + '</div>'
+    : '<div class="pd-valor-evolucao pd-sem-comparativo">---%</div><div class="pd-periodo">sem comparativo</div>';
+
+  var cardsHtml = ehPainelProdutividade
+    ? (dados.estatisticasEnviadas === false
+      ? '<section class="pd-estatisticas-aviso"><i class="fas fa-triangle-exclamation"></i> ' + escDashboard(dados.avisoEstatisticas || 'ESTATÍSTICAS NÃO ENVIADAS') + '<small>Não existem registros da delegacia para o mês e o ano selecionados.</small></section>'
+      : renderCardsProdutividadeDepatri_(dados.cards || [], dados.periodo || {}))
+    : renderCardsDepatri_(dados.cards || []);
+
+  var faixaHtml = ehPainelProdutividade || dados.ocultarFaixaInstitucional ? '' : renderFaixaInstitucionalDepatri_();
+
+  adminActions += '<div class="pd-admin-actions d-flex justify-content-end mb-2"><button class="btn btn-outline-secondary btn-sm" onclick="alternarApresentacaoDepatri_()">Modo apresentação</button></div>';
+  var html = adminActions
+    + '<div class="painel-depatri" id="painelDepatriWrapper">'
+    + '<button class="pd-apresentacao-sair" onclick="alternarApresentacaoDepatri_()">Sair da apresentação · Esc</button>'
+    + '  <section class="pd-topo">'
+    + '    <div class="pd-brasao">' + renderBrasaoDepatri_() + '</div>'
+    + '    <div class="pd-titulo-area">'
+    + '      <div class="pd-departamento">' + escDashboard(dados.departamento || 'DEPARTAMENTO DE COMBATE AOS CRIMES CONTRA O PATRIMÔNIO') + '</div>'
+    + '      <div class="pd-depatri">DEPATRI</div>'
+    + '      <div class="pd-delegacia">' + escDashboard(dados.delegacia || '') + '</div>'
+    + '      <div class="pd-legenda">Dados gerados a partir da produtividade registrada no sistema.</div>'
+    + '    </div>'
+    + '    <div class="pd-predio">' + renderPredioDepatri_() + '</div>'
+    + '  </section>'
+
+    + '  <section class="pd-resumo">'
+    + '    <div class="pd-resumo-bloco">'
+    + '      <div class="pd-icone-analise"><i class="fas fa-chart-column"></i></div>'
+    + '      <div class="pd-texto-institucional">Visão executiva<small>Indicadores de produtividade</small></div>'
+    + '    </div>'
+    + '    <div class="pd-resumo-bloco pd-total-box">'
+    + '      <div class="pd-rotulo">' + escDashboard(dados.totalRotulo || 'TOTAL DE REGISTROS') + '</div>'
+    + '      <div class="pd-numero-total">' + formatNumeroDashboard(dados.total || 0, 0) + '</div>'
+    + '    </div>'
+    + '    <div class="pd-resumo-bloco pd-evolucao-total ' + evolTotalClasse + '">'
+    + '      <div class="pd-icone-evolucao"><i class="fas ' + ((Number(dados.evolucaoTotal || 0) < 0) ? 'fa-arrow-trend-down' : 'fa-arrow-trend-up') + '"></i></div>'
+    + '      <div>' + evolTotalHtml + '</div>'
+    + '    </div>'
+    + '  </section>'
+
+    + cardsHtml
+    + faixaHtml
+    + '  <footer class="pd-rodape"><span>POLÍCIA CIVIL DO CEARÁ: PRESENTE, INVESTIGANDO E PROTEGENDO.</span></footer>'
+    + '</div>';
+
+  area.innerHTML = html;
+  if (DASHBOARD_PORTAL_STATE.apresentando) document.getElementById('painelDepatriWrapper').classList.add('pd-apresentando');
+}
+
+
+function alternarApresentacaoDepatri_() {
+  var painel = document.getElementById('painelDepatriWrapper');
+  if (!painel) return;
+  fecharSeletorContadorDepatri_();
+  DASHBOARD_PORTAL_STATE.apresentando = !DASHBOARD_PORTAL_STATE.apresentando;
+  painel.classList.toggle('pd-apresentando', DASHBOARD_PORTAL_STATE.apresentando);
+}
+window.addEventListener('keydown', function(evento) {
+  if (evento.key === 'Escape' && DASHBOARD_PORTAL_STATE.apresentando) alternarApresentacaoDepatri_();
+});
+
+function renderBrasaoDepatri_() {
+  if (DASHBOARD_DEPATRI_ASSETS.brasaoUrl) {
+    return '<img src="' + escDashboard(DASHBOARD_DEPATRI_ASSETS.brasaoUrl) + '" alt="Brasão Polícia Civil CE">';
+  }
+  return '<div class="pd-brasao-fallback">POLÍCIA<br>CIVIL<br><small>CE</small></div>';
+}
+
+
+function renderPredioDepatri_() {
+  if (DASHBOARD_DEPATRI_ASSETS.predioUrl) {
+    return '<img src="' + escDashboard(DASHBOARD_DEPATRI_ASSETS.predioUrl) + '" alt="Prédio Polícia Civil">';
+  }
+  return '<div class="pd-predio-fallback">POLÍCIA CIVIL</div>';
+}
+
+
+function renderCardsDepatri_(cards) {
+  var qtd = (cards || []).length;
+  var classe = qtd === 1 ? 'qtd-1' : qtd === 2 ? 'qtd-2' : qtd === 3 ? 'qtd-3' : qtd === 4 ? 'qtd-4' : 'qtd-5';
+  var html = '<section class="pd-cards ' + classe + '">';
+
+
+  (cards || []).forEach(function(card) {
+    var nome = card.crimeExibicao || card.crime || card.crimeChave || '';
+    var unica = qtd === 1;
+    var evol = Number(card.evolucao || 0);
+    var negativo = evol < 0;
+    var semComp = !card.temComparativo;
+
+
+    var evolHtml = semComp
+      ? '<div class="pd-evol-card sem-comp">Sem comparativo</div>'
+      : '<div class="pd-evol-card ' + (negativo ? 'negativo' : '') + '"><i class="fas ' + (negativo ? 'fa-arrow-down' : 'fa-arrow-up') + '"></i> ' + formatEvolucaoDepatri(evol) + '</div>';
+
+
+    html += ''
+      + '<article class="pd-card ' + (unica ? 'qtd-unica' : '') + '">'
+      + '  <div class="pd-card-top">'
+      + '    <div class="pd-crime-icone"><i class="fas ' + escDashboard(card.icone || 'fa-chart-column') + '"></i></div>'
+      + '    <div class="pd-crime-content">'
+      + '      <div class="pd-crime-nome">' + escDashboard(nome) + '</div>'
+      + '      <div class="pd-crime-qtd">' + formatNumeroDashboard(card.quantidade || 0, 0) + '</div>'
+      + '    </div>'
+      + '  </div>'
+      + '  <div class="pd-linha-card"></div>'
+      + '  <div class="pd-card-bottom">'
+      + '    <div><div class="pd-mini-label">ANTERIOR</div><div class="pd-anterior">' + (semComp ? '---' : formatNumeroDashboard(card.quantidadeAnterior || 0, 0)) + '</div></div>'
+      + '    <div><div class="pd-mini-label">EVOLUÇÃO</div>' + evolHtml + '</div>'
+      + '  </div>'
+      + '</article>';
+  });
+
+
+  html += '</section>';
+  return html;
+}
+
+
+
+function formatValorMetricaDrf_(valor, tipo) {
+  if (tipo === 'moeda') return formatMoedaDashboard(valor);
+  if (tipo === 'peso') {
+    return Number(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' kg';
+  }
+  return formatNumeroDashboard(valor, 0);
+}
+
+function renderCardsProdutividadeDepatri_(cards, periodo) {
+  var rotuloPeriodoAnterior = periodo && periodo.rotuloAnteriorCards
+    ? periodo.rotuloAnteriorCards
+    : ((periodo && periodo.anterior && periodo.anterior.ano)
+      ? 'MESMO PERÍODO ' + periodo.anterior.ano
+      : 'COMPARATIVO');
+  var html = '<section class="pd-cards-drf">';
+
+  (cards || []).forEach(function(card) {
+    (card.metricas || []).forEach(function(metrica, indiceMetrica) {
+      var negativo = Number(metrica.evolucao || 0) < 0;
+      var classeTipo = metrica.tipo === 'moeda' ? 'tipo-moeda' : (metrica.tipo === 'peso' ? 'tipo-peso' : '');
+      var temDadosAnterior = metrica.temDadosAnterior !== false;
+      var slotIndex = metrica.slotIndex == null ? indiceMetrica : Number(metrica.slotIndex);
+      var botoesEdicao = DASHBOARD_PORTAL_STATE.painelCanEdit
+        ? '<span class="pd-contador-acoes">'
+          + '<button type="button" class="pd-contador-select-btn" data-card-id="' + escDashboard(card.id || '') + '" data-slot-index="' + slotIndex + '" onclick="abrirSeletorContadorDepatri(this)" title="Trocar contador" aria-label="Trocar o contador ' + escDashboard(metrica.rotulo || '') + '"><i class="fas fa-chevron-down"></i></button>'
+          + '</span>'
+        : '';
+      var anteriorHtml = temDadosAnterior
+        ? formatValorMetricaDrf_(metrica.valorAnterior || 0, metrica.tipo)
+        : '---';
+      var evolucaoHtml = metrica.temComparativo
+        ? '<span class="pd-card-drf-evolucao ' + (negativo ? 'negativo' : '') + '"><i class="fas ' + (negativo ? 'fa-arrow-down' : 'fa-arrow-up') + '"></i> ' + formatEvolucaoDepatri(metrica.evolucao) + '</span>'
+        : (temDadosAnterior
+          ? '<span class="pd-card-drf-evolucao sem-comp">Sem base percentual</span>'
+          : '<span class="pd-card-drf-evolucao sem-comp">Sem comparativo</span>');
+
+      html += '<article class="pd-card-drf-metrica">'
+        + '  <div class="pd-card-drf-label"><span class="pd-card-drf-label-text">' + escDashboard(nomeContadorLivreDepatri_(metrica.fonteCardId || card.id, metrica.metricaId || metrica.id, metrica.rotuloPadrao || metrica.rotulo)) + '</span>' + botoesEdicao + '</div>'
+        + '  <div class="pd-card-drf-valor ' + classeTipo + '">' + formatValorMetricaDrf_(metrica.valor || 0, metrica.tipo) + '</div>'
+        + '  <div class="pd-card-drf-comp">'
+        + '    <div><div class="pd-card-drf-mini">' + escDashboard(rotuloPeriodoAnterior) + '</div><div class="pd-card-drf-mini-valor">' + anteriorHtml + '</div></div>'
+        + '    <div><div class="pd-card-drf-mini">EVOLUÇÃO</div><div class="pd-card-drf-mini-valor">' + evolucaoHtml + '</div></div>'
+        + '  </div>'
+        + '</article>';
+    });
+  });
+
+  html += '</section>';
+  return html;
+}
+
+function renderFaixaInstitucionalDepatri_() {
+  return ''
+    + '<section class="pd-faixa">'
+    + '  <div class="pd-valor-item"><div class="pd-valor-icone"><i class="fas fa-shield-halved"></i></div><div><div class="pd-valor-titulo">Investigar é<br>nossa missão</div><div class="pd-valor-texto">Trabalhamos com técnica, método e dedicação para entregar resultados.</div></div></div>'
+    + '  <div class="pd-valor-item"><div class="pd-valor-icone"><i class="fas fa-brain"></i></div><div><div class="pd-valor-titulo">Inteligência é<br>nossa ferramenta</div><div class="pd-valor-texto">Análise de dados e tecnologia para decisões assertivas e investigações eficazes.</div></div></div>'
+    + '  <div class="pd-valor-item"><div class="pd-valor-icone"><i class="fas fa-arrow-trend-up"></i></div><div><div class="pd-valor-titulo">Resultados são<br>nosso compromisso</div><div class="pd-valor-texto">Aumento da elucidação, recuperação de bens e responsabilização dos autores de crimes.</div></div></div>'
+    + '  <div class="pd-valor-item"><div class="pd-valor-icone"><i class="fas fa-people-shield"></i></div><div><div class="pd-valor-titulo">Proteger, servir<br>e fazer justiça</div><div class="pd-valor-texto">Compromisso permanente com a sociedade e a segurança do cidadão.</div></div></div>'
+    + '</section>';
+}
+
+
+function formatEvolucaoDepatri(valor) {
+  var n = Number(valor || 0);
+  var sinal = n >= 0 ? '+' : '-';
+  return sinal + Math.abs(n).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+}
+
+function obterConfigVisaoDepatri_(visao) {
+  return DASHBOARD_PORTAL_STATE.painelConfig &&
+    DASHBOARD_PORTAL_STATE.painelConfig.config &&
+    DASHBOARD_PORTAL_STATE.painelConfig.config[visao];
+}
+
+function encontrarCardConfiguradoDepatri_(cfg, cardId) {
+  var cards = (cfg && cfg.cards) || [];
+  for (var i = 0; i < cards.length; i++) {
+    if (String(cards[i].id || '') === String(cardId || '')) return cards[i];
+  }
+  return null;
+}
+
+function copiarRotulosContadorDepatri_(rotulos) {
+  var copia = {};
+  Object.keys(rotulos || {}).forEach(function(chave) {
+    copia[chave] = rotulos[chave];
+  });
+  return copia;
+}
+
+function obterCardDadosPainelDepatri_(cardId) {
+  var cards = (DASHBOARD_PORTAL_STATE.painelDados && DASHBOARD_PORTAL_STATE.painelDados.cards) || [];
+  for (var i = 0; i < cards.length; i++) {
+    if (String(cards[i].id || '') === String(cardId || '')) return cards[i];
+  }
+  return null;
+}
+
+function obterMetricaDadosPainelDepatri_(cardId, slotIndex) {
+  var card = obterCardDadosPainelDepatri_(cardId);
+  return card && card.metricas && card.metricas[Number(slotIndex)] || null;
+}
+
+function obterMetricaCatalogoGlobalDepatri_(fonteCardId, metricaId) {
+  var card = obterCatalogoCardProdutividadeDepatri_(fonteCardId);
+  var encontrada = null;
+  (card && card.metricas || []).some(function(metrica) {
+    if (String(metrica.id || '') !== String(metricaId || '')) return false;
+    encontrada = metrica;
+    return true;
+  });
+  return encontrada;
+}
+
+function metricasPadraoCardDepatri_(cardConfigurado) {
+  var catalogoCard = obterCatalogoCardProdutividadeDepatri_(cardConfigurado && cardConfigurado.id);
+  var rotulosLegados = cardConfigurado && cardConfigurado.rotulos || {};
+  return (catalogoCard && catalogoCard.metricas || []).map(function(metrica) {
+    var personalizado = String(rotulosLegados[metrica.id] || '').trim();
+    return {
+      fonteCardId: catalogoCard.id,
+      metricaId: metrica.id,
+      rotuloPersonalizado: personalizado && personalizado !== metrica.rotulo ? personalizado : ''
+    };
+  });
+}
+
+function metricasAtuaisCardDepatri_(cardConfigurado) {
+  var cardDados = obterCardDadosPainelDepatri_(cardConfigurado && cardConfigurado.id);
+  if (cardDados && Array.isArray(cardDados.metricas) && cardDados.metricas.length) {
+    return cardDados.metricas.map(function(metrica) {
+      return {
+        fonteCardId: String(metrica.fonteCardId || cardConfigurado.id || ''),
+        metricaId: String(metrica.metricaId || metrica.id || ''),
+        rotuloPersonalizado: String(metrica.rotuloPersonalizado || '')
+      };
+    });
+  }
+  if (Array.isArray(cardConfigurado && cardConfigurado.metricasSelecionadas) && cardConfigurado.metricasSelecionadas.length) {
+    return cardConfigurado.metricasSelecionadas.map(function(metrica) {
+      return {
+        fonteCardId: String(metrica.fonteCardId || ''),
+        metricaId: String(metrica.metricaId || ''),
+        rotuloPersonalizado: String(metrica.rotuloPersonalizado || '')
+      };
+    });
+  }
+  return metricasPadraoCardDepatri_(cardConfigurado);
+}
+
+function montarPayloadCardsAtuaisDepatri_(cfg) {
+  return (cfg && cfg.cards || []).map(function(card, posicao) {
+    return {
+      cardId: card.id,
+      ordem: posicao + 1,
+      titulo: card.titulo || '',
+      rotulos: copiarRotulosContadorDepatri_(card.rotulos || {}),
+      metricasSelecionadas: metricasAtuaisCardDepatri_(card)
+    };
+  });
+}
+
+function abrirEditorContadorDepatri(botao) {
+  return abrirSeletorContadorDepatri(botao);
+}
+
+function editorRotuloLegadoDesativadoDepatri_(botao) {
+  if (!DASHBOARD_PORTAL_STATE.painelCanEdit) {
+    return alert('Apenas a DIREÇÃO ou o ADMIN podem editar.');
+  }
+
+  var visao = ((document.getElementById('dashVisao') || {}).value || '');
+  var cardId = String(botao && botao.getAttribute('data-card-id') || '').trim();
+  var slotIndex = Number(botao && botao.getAttribute('data-slot-index'));
+  var cfg = obterConfigVisaoDepatri_(visao);
+  var catalogoCard = obterCatalogoCardProdutividadeDepatri_(cardId);
+  var cardConfigurado = encontrarCardConfiguradoDepatri_(cfg, cardId);
+  var metricaAtual = obterMetricaDadosPainelDepatri_(cardId, slotIndex);
+
+  if (!visao || !cfg || !catalogoCard || !cardConfigurado || !metricaAtual) {
+    return alert('Não foi possível localizar a configuração deste contador. Atualize a página e tente novamente.');
+  }
+
+  var rotuloPadrao = String(metricaAtual.rotuloPadrao || metricaAtual.rotulo || metricaAtual.id || '');
+  var rotuloAtual = String(metricaAtual.rotulo || rotuloPadrao);
+  DASHBOARD_PORTAL_STATE.painelEditorContador = {
+    visao: visao,
+    cardId: cardId,
+    slotIndex: slotIndex,
+    rotuloPadrao: rotuloPadrao
+  };
+
+  var box = document.getElementById('dashEditorDepatri');
+  if (!box) return;
+  box.innerHTML = ''
+    + '<div class="pd-admin-box">'
+    + '  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">'
+    + '    <div><strong>Editar nome do contador</strong><div class="small text-muted">Card: ' + escDashboard(cardConfigurado.titulo || catalogoCard.titulo || cardId) + '</div></div>'
+    + '    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="fecharEditorPainelDepatri()">Fechar</button>'
+    + '  </div>'
+    + '  <label class="form-label text-dark" for="pdEditRotuloContador">Nome exibido</label>'
+    + '  <input type="text" maxlength="100" class="form-control" id="pdEditRotuloContador" value="' + escDashboard(rotuloAtual) + '" placeholder="' + escDashboard(rotuloPadrao) + '">'
+    + '  <div class="small text-muted mt-2">Deixe vazio para restaurar o nome padrão: <strong>' + escDashboard(rotuloPadrao) + '</strong>.</div>'
+    + '  <div class="d-flex justify-content-end gap-2 mt-3">'
+    + '    <button type="button" class="btn btn-outline-secondary" onclick="fecharEditorPainelDepatri()">Cancelar</button>'
+    + '    <button type="button" id="pdSalvarRotuloContador" class="btn btn-success" onclick="salvarRotuloContadorDepatri()"><i class="fas fa-save"></i> Salvar nome</button>'
+    + '  </div>'
+    + '</div>';
+  box.style.display = '';
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  var input = document.getElementById('pdEditRotuloContador');
+  if (input) {
+    input.focus();
+    input.select();
+  }
+}
+
+function salvarRotuloContadorDepatri() {
+  if (!DASHBOARD_PORTAL_STATE.painelCanEdit || DASHBOARD_PORTAL_STATE.salvandoConfig) return;
+
+  var editor = DASHBOARD_PORTAL_STATE.painelEditorContador;
+  var cfg = editor && obterConfigVisaoDepatri_(editor.visao);
+  var input = document.getElementById('pdEditRotuloContador');
+  if (!editor || !cfg || !input) return alert('Editor de contador inválido. Abra o lápis novamente.');
+
+  var novoRotulo = String(input.value || '').trim().slice(0, 100);
+  var encontrouCard = false;
+  var cards = montarPayloadCardsAtuaisDepatri_(cfg);
+  cards.forEach(function(card) {
+    if (String(card.cardId || '') === editor.cardId && card.metricasSelecionadas[editor.slotIndex]) {
+      encontrouCard = true;
+      card.metricasSelecionadas[editor.slotIndex].rotuloPersonalizado =
+        (!novoRotulo || novoRotulo === editor.rotuloPadrao) ? '' : novoRotulo;
+    }
+  });
+
+  if (!encontrouCard || !cards.length) {
+    return alert('O card deste contador não está mais selecionado. Atualize a página e tente novamente.');
+  }
+
+  var btn = document.getElementById('pdSalvarRotuloContador');
+  DASHBOARD_PORTAL_STATE.salvandoConfig = true;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+  }
+
+  google.script.run
+    .withSuccessHandler(function(ret) {
+      DASHBOARD_PORTAL_STATE.salvandoConfig = false;
+      fecharEditorPainelDepatri();
+      alert((ret && ret.mensagem) || 'Nome do contador salvo.');
+      carregarConfigPainelDepatriPortal_();
+    })
+    .withFailureHandler(function(err) {
+      DASHBOARD_PORTAL_STATE.salvandoConfig = false;
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Salvar nome';
+      }
+      if (typeof console !== 'undefined' && console.error) {
+        console.error('[DEPATRI] Falha ao salvar o nome do contador:', err);
+      }
+      alert((err && err.message) || err || 'Erro ao salvar o nome do contador.');
+    })
+    .salvarDashboardDepatriConfig(usuarioAtual.login, {
+      unidade: editor.visao,
+      nome: cfg.nome || '',
+      cards: cards
+    });
+}
+
+function fecharSeletorContadorDepatri_() {
+  var popover = document.getElementById('pdContadorSeletorPopover');
+  if (popover && popover.parentNode) popover.parentNode.removeChild(popover);
+  DASHBOARD_PORTAL_STATE.painelSeletorContador = null;
+}
+
+function montarOpcoesSeletorContadorDepatri_(valorAtual) {
+  var catalogo = (DASHBOARD_PORTAL_STATE.painelConfig && DASHBOARD_PORTAL_STATE.painelConfig.catalogoCards) || [];
+  var html = '';
+  catalogo.forEach(function(card) {
+    if (!(card.metricas || []).length) return;
+    html += '<section class="pd-contador-grupo">'
+      + '<div class="pd-contador-grupo-titulo">' + escDashboard(card.titulo || card.id) + '</div>'
+      + '<div class="pd-contador-grupo-lista">';
+    (card.metricas || []).forEach(function(metrica) {
+      var valor = String(card.id || '') + '::' + String(metrica.id || '');
+      html += '<button type="button" class="pd-contador-opcao ' + (valor === valorAtual ? 'ativo' : '') + '"'
+        + ' data-valor="' + escDashboard(valor) + '"'
+        + ' onclick="salvarSelecaoContadorDepatri(this)">'
+        + '<span>' + escDashboard(metrica.rotulo || metrica.id) + '</span></button>';
+    });
+    html += '</div></section>';
+  });
+  return html || '<div class="small text-muted p-2">Nenhum contador disponível.</div>';
+}
+
+function abrirSeletorContadorDepatri(botao) {
+  if (!DASHBOARD_PORTAL_STATE.painelCanEdit || DASHBOARD_PORTAL_STATE.salvandoConfig) return;
+  fecharSeletorContadorDepatri_();
+
+  var visao = ((document.getElementById('dashVisao') || {}).value || '');
+  var cardId = String(botao && botao.getAttribute('data-card-id') || '').trim();
+  var slotIndex = Number(botao && botao.getAttribute('data-slot-index'));
+  var cfg = obterConfigVisaoDepatri_(visao);
+  var metricaAtual = obterMetricaDadosPainelDepatri_(cardId, slotIndex);
+  if (!visao || !cfg || !metricaAtual) {
+    return alert('Não foi possível localizar este contador. Atualize a página e tente novamente.');
+  }
+
+  var valorAtual = String(metricaAtual.fonteCardId || cardId) + '::' + String(metricaAtual.metricaId || metricaAtual.id || '');
+  DASHBOARD_PORTAL_STATE.painelSeletorContador = {
+    visao: visao,
+    cardId: cardId,
+    slotIndex: slotIndex,
+    valorAtual: valorAtual
+  };
+
+  var popover = document.createElement('div');
+  popover.id = 'pdContadorSeletorPopover';
+  popover.className = 'pd-contador-popover';
+  popover.innerHTML = ''
+    + '<div class="pd-contador-popover-topo"><span>Selecionar contador</span><button type="button" class="pd-contador-popover-fechar" onclick="fecharSeletorContadorDepatri_()" aria-label="Fechar"><i class="fas fa-xmark"></i></button></div>'
+    + '<div id="pdContadorListaGlobal" class="pd-contador-opcoes">'
+    + montarOpcoesSeletorContadorDepatri_(valorAtual)
+    + '</div>'
+    + '<div id="pdContadorSeletorStatus" class="pd-contador-popover-status">Você pode repetir o mesmo contador em outras posições.</div>';
+  document.body.appendChild(popover);
+
+  var rect = botao.getBoundingClientRect();
+  var largura = popover.offsetWidth || 430;
+  var altura = popover.offsetHeight || 480;
+  var left = Math.max(12, Math.min(window.innerWidth - largura - 12, rect.right - largura));
+  var top = rect.bottom + 6;
+  if (top + altura > window.innerHeight - 12) top = Math.max(12, rect.top - altura - 6);
+  popover.style.left = left + 'px';
+  popover.style.top = top + 'px';
+
+  var atual = popover.querySelector('.pd-contador-opcao.ativo');
+  if (atual) atual.scrollIntoView({ block: 'nearest' });
+}
+
+function salvarSelecaoContadorDepatri(controle) {
+  if (!DASHBOARD_PORTAL_STATE.painelCanEdit || DASHBOARD_PORTAL_STATE.salvandoConfig) return;
+  var editor = DASHBOARD_PORTAL_STATE.painelSeletorContador;
+  var cfg = editor && obterConfigVisaoDepatri_(editor.visao);
+  var valor = String(controle && (controle.getAttribute('data-valor') || controle.value) || '');
+  if (!editor || !cfg || valor.indexOf('::') < 0) return;
+  if (valor === editor.valorAtual) return fecharSeletorContadorDepatri_();
+
+  var partes = valor.split('::');
+  var fonteCardId = partes.shift();
+  var metricaId = partes.join('::');
+  if (!obterMetricaCatalogoGlobalDepatri_(fonteCardId, metricaId)) {
+    return alert('Contador inválido. Atualize a página e tente novamente.');
+  }
+
+  var encontrouSlot = false;
+  var cards = montarPayloadCardsAtuaisDepatri_(cfg);
+  cards.forEach(function(card) {
+    if (String(card.cardId || '') !== editor.cardId || !card.metricasSelecionadas[editor.slotIndex]) return;
+    encontrouSlot = true;
+    card.metricasSelecionadas[editor.slotIndex] = {
+      fonteCardId: fonteCardId,
+      metricaId: metricaId,
+      rotuloPersonalizado: ''
+    };
+  });
+  if (!encontrouSlot) return alert('A posição deste contador não foi localizada. Atualize a página e tente novamente.');
+
+  DASHBOARD_PORTAL_STATE.salvandoConfig = true;
+  var opcoes = document.querySelectorAll('#pdContadorListaGlobal .pd-contador-opcao');
+  Array.prototype.forEach.call(opcoes, function(opcao) { opcao.disabled = true; });
+  var status = document.getElementById('pdContadorSeletorStatus');
+  if (status) status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando seleção...';
+
+  google.script.run
+    .withSuccessHandler(function() {
+      DASHBOARD_PORTAL_STATE.salvandoConfig = false;
+      fecharSeletorContadorDepatri_();
+      carregarConfigPainelDepatriPortal_();
+    })
+    .withFailureHandler(function(err) {
+      DASHBOARD_PORTAL_STATE.salvandoConfig = false;
+      Array.prototype.forEach.call(opcoes, function(opcao) { opcao.disabled = false; });
+      if (status) status.textContent = 'Falha ao salvar.';
+      if (typeof console !== 'undefined' && console.error) {
+        console.error('[DEPATRI] Falha ao trocar o contador:', err);
+      }
+      alert((err && err.message) || err || 'Erro ao trocar o contador.');
+    })
+    .salvarDashboardDepatriConfig(usuarioAtual.login, {
+      unidade: editor.visao,
+      nome: cfg.nome || '',
+      cards: cards
+    });
+}
+
+
+// ============================================================================
+// EDIÇÃO ADMIN DOS CARDS
+// ============================================================================
+function abrirEditorPainelDepatri() {
+  if (!DASHBOARD_PORTAL_STATE.painelCanEdit) return alert('Apenas a DIREÇÃO ou o ADMIN podem editar.');
+  var visao = ((document.getElementById('dashVisao') || {}).value || '');
+  if (!visao || visao === 'GERAL') return;
+  var cfg = DASHBOARD_PORTAL_STATE.painelConfig && DASHBOARD_PORTAL_STATE.painelConfig.config && DASHBOARD_PORTAL_STATE.painelConfig.config[visao];
+  if (!cfg) return alert('Configuração não encontrada para esta visão.');
+
+  if (['DRF', 'DRFV', 'DAS', 'DDF'].indexOf(visao) > -1) {
+    abrirSeletorCardsProdutividadeDepatri_(visao, cfg);
+    return;
+  }
+
+
+  var box = document.getElementById('dashEditorDepatri');
+  if (!box) return;
+  var html = ''
+    + '<div class="pd-admin-box">'
+    + '  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">'
+    + '    <div><strong>Editar Painel DEPATRI</strong><div class="small text-muted">Disponível somente para a DIREÇÃO e o ADMIN.</div></div>'
+    + '    <button class="btn btn-sm btn-outline-secondary" onclick="fecharEditorPainelDepatri()">Fechar</button>'
+    + '  </div>'
+    + '  <div class="mb-3"><label class="form-label text-dark">Nome da unidade no painel</label><input type="text" class="form-control" id="pdEditNomeUnidade" value="' + escDashboard(cfg.nome || '') + '"></div>'
+    + '  <div class="table-responsive"><table class="table table-sm align-middle">'
+    + '    <thead><tr><th>Ativo</th><th>Ordem</th><th>crimeChave</th><th>crimeExibicao</th><th>Ícone FontAwesome</th></tr></thead><tbody>';
+
+
+  (cfg.crimes || []).forEach(function(c, idx) {
+    html += '<tr data-pd-edit-row="' + idx + '">'
+      + '<td><input type="checkbox" class="form-check-input pd-edit-ativo" ' + (c.ativo !== false ? 'checked' : '') + '></td>'
+      + '<td><input type="number" class="form-control form-control-sm pd-edit-ordem" value="' + escDashboard(c.ordem || (idx + 1)) + '" style="width:80px"></td>'
+      + '<td><input type="text" class="form-control form-control-sm pd-edit-chave" value="' + escDashboard(c.crimeChave || '') + '" readonly></td>'
+      + '<td><input type="text" class="form-control form-control-sm pd-edit-exibicao" value="' + escDashboard(c.crimeExibicao || c.crimeChave || '') + '"></td>'
+      + '<td><input type="text" class="form-control form-control-sm pd-edit-icone" value="' + escDashboard(c.icone || 'fa-chart-column') + '" placeholder="fa-car-side"></td>'
+      + '</tr>';
+  });
+
+
+  html += '    </tbody></table></div>'
+    + '  <div class="d-flex justify-content-end gap-2">'
+    + '    <button class="btn btn-outline-secondary" onclick="fecharEditorPainelDepatri()">Cancelar</button>'
+    + '    <button id="pdSalvarEditorPainel" class="btn btn-success" onclick="salvarEditorPainelDepatri()"><i class="fas fa-save"></i> Salvar configuração</button>'
+    + '  </div>'
+    + '</div>';
+
+
+  box.innerHTML = html;
+  box.style.display = '';
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function nomeContadorLivreDepatri_(fonte, id, fallback) {
+  var card = obterCatalogoCardProdutividadeDepatri_(fonte);
+  var metrica = obterMetricaCatalogoGlobalDepatri_(fonte, id);
+  var nome = metrica ? metrica.rotulo : (fallback || id);
+  // Qualifica rótulos curtos como "Recuperados" e "Com relatório".
+  if (fonte === 'acervo_inqueritos') return 'ÚLTIMO ACERVO DE INQUÉRITOS INFORMADO';
+  var qualificar = ['inqueritos_remetidos', 'veiculos', 'interceptacoes', 'quebras_sigilo', 'indiciamentos_flagrante', 'indiciamentos_portaria', 'inqueritos_instaurados', 'inqueritos_concluidos'];
+  return card && qualificar.indexOf(fonte) > -1 ? card.titulo + ' — ' + nome : nome;
+}
+
+function abrirSeletorCardsProdutividadeDepatri_(visao, cfg) {
+  var box = document.getElementById('dashEditorDepatri');
+  if (!box) return;
+  DASHBOARD_PORTAL_STATE.contadoresLivres = [];
+  (cfg.cards || []).forEach(function(card) {
+    metricasAtuaisCardDepatri_(card).forEach(function(m) {
+      DASHBOARD_PORTAL_STATE.contadoresLivres.push(m.fonteCardId + '::' + m.metricaId);
+    });
+  });
+  box.innerHTML = '<div class="pd-admin-box"><strong>Organizar contadores</strong>'
+    + '<p>Escolha os indicadores e a ordem de exibição nesta página. O nome acompanha automaticamente o contador.</p>'
+    + '<div id="pdListaLivre" class="pd-selector-grid"></div>'
+    + '<div class="d-flex gap-2 mt-3"><button class="btn btn-outline-primary" onclick="adicionarContadorLivreDepatri_()">Adicionar contador</button>'
+    + '<button id="pdSalvarEditorPainel" class="btn btn-success" onclick="salvarEditorPainelDepatri()">Salvar configuração</button>'
+    + '<button class="btn btn-outline-secondary" onclick="fecharEditorPainelDepatri()">Cancelar</button></div></div>';
+  renderEditorLivreDepatri_();
+  box.style.display = '';
+  box.scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+function renderEditorLivreDepatri_() {
+  var lista = DASHBOARD_PORTAL_STATE.contadoresLivres || [];
+  var catalogo = DASHBOARD_PORTAL_STATE.painelConfig.catalogoCards || [];
+  document.getElementById('pdListaLivre').innerHTML = lista.map(function(valor, i) {
+    var opcoes = '';
+    catalogo.forEach(function(card) {
+      (card.metricas || []).forEach(function(m) {
+        var chave = card.id + '::' + m.id;
+        opcoes += '<option value="' + escDashboard(chave) + '" ' + (chave === valor ? 'selected' : '') + '>'
+          + escDashboard(nomeContadorLivreDepatri_(card.id, m.id)) + '</option>';
+      });
+    });
+    return '<div class="pd-selector-slot"><label>Posição ' + (i + 1) + '</label>'
+      + '<select class="form-select" onchange="DASHBOARD_PORTAL_STATE.contadoresLivres[' + i + ']=this.value">' + opcoes + '</select>'
+      + '<div class="d-flex gap-2 mt-2"><button class="btn btn-sm btn-outline-secondary" onclick="moverContadorLivreDepatri_(' + i + ',-1)" ' + (i === 0 ? 'disabled' : '') + '>Anterior</button>'
+      + '<button class="btn btn-sm btn-outline-secondary" onclick="moverContadorLivreDepatri_(' + i + ',1)" ' + (i === lista.length - 1 ? 'disabled' : '') + '>Próximo</button>'
+      + '<button class="btn btn-sm btn-outline-danger" onclick="removerContadorLivreDepatri_(' + i + ')">Remover</button></div></div>';
+  }).join('');
+}
+function adicionarContadorLivreDepatri_() {
+  var lista = DASHBOARD_PORTAL_STATE.contadoresLivres;
+  if (lista.length >= 96) return alert('Limite de 96 contadores.');
+  var card = DASHBOARD_PORTAL_STATE.painelConfig.catalogoCards[0];
+  lista.push(card.id + '::' + card.metricas[0].id);
+  renderEditorLivreDepatri_();
+}
+function removerContadorLivreDepatri_(i) {
+  if (DASHBOARD_PORTAL_STATE.contadoresLivres.length <= 1) return alert('Mantenha pelo menos um contador.');
+  DASHBOARD_PORTAL_STATE.contadoresLivres.splice(i, 1);
+  renderEditorLivreDepatri_();
+}
+function moverContadorLivreDepatri_(i, direcao) {
+  var lista = DASHBOARD_PORTAL_STATE.contadoresLivres, j = i + direcao;
+  if (j < 0 || j >= lista.length) return;
+  var valor = lista[i]; lista[i] = lista[j]; lista[j] = valor;
+  renderEditorLivreDepatri_();
+}
+function payloadContadoresLivresDepatri_() {
+  var lista = DASHBOARD_PORTAL_STATE.contadoresLivres || [];
+  var catalogo = DASHBOARD_PORTAL_STATE.painelConfig.catalogoCards;
+  var cards = [];
+  lista.forEach(function(valor, i) {
+    var grupo = Math.floor(i / 12), partes = valor.split('::');
+    if (!cards[grupo]) cards[grupo] = {cardId: catalogo[grupo].id, ordem: grupo + 1, rotulos: {}, metricasSelecionadas: []};
+    cards[grupo].metricasSelecionadas.push({fonteCardId: partes.shift(), metricaId: partes.join('::'), rotuloPersonalizado: ''});
+  });
+  return cards;
+}
+
+function obterCatalogoCardProdutividadeDepatri_(cardId) {
+  var catalogo = (DASHBOARD_PORTAL_STATE.painelConfig && DASHBOARD_PORTAL_STATE.painelConfig.catalogoCards) || [];
+  for (var i = 0; i < catalogo.length; i++) {
+    if (catalogo[i].id === cardId) return catalogo[i];
+  }
+  return null;
+}
+
+function atualizarEditorRotulosCardDepatri_(posicao) {
+  var select = document.getElementById('pdCardSlot' + posicao);
+  var custom = document.getElementById('pdCardCustom' + posicao);
+  if (!select || !custom) return;
+
+  var cardId = String(select.value || '').trim();
+  var catalogoCard = obterCatalogoCardProdutividadeDepatri_(cardId);
+  if (!cardId || !catalogoCard) {
+    custom.innerHTML = '';
+    custom.style.display = 'none';
+    return;
+  }
+
+  var configurados = DASHBOARD_PORTAL_STATE.painelEditorCards || [];
+  var configurado = {};
+  for (var i = 0; i < configurados.length; i++) {
+    if (String(configurados[i].id || '') === cardId) {
+      configurado = configurados[i];
+      break;
+    }
+  }
+  var titulo = configurado.titulo || catalogoCard.titulo || '';
+  var configuradoParaMetricas = Object.assign({}, configurado, { id: cardId });
+  var selecoes = metricasAtuaisCardDepatri_(configuradoParaMetricas);
+  var html = ''
+    + '<div class="pd-selector-custom-titulo">Personalizar nomes</div>'
+    + '<div class="pd-selector-custom-campo">'
+    + '  <label for="pdCardTitulo' + posicao + '">Título principal do card</label>'
+    + '  <input id="pdCardTitulo' + posicao + '" type="text" maxlength="100" class="form-control form-control-sm pd-card-titulo" value="' + escDashboard(titulo) + '" placeholder="' + escDashboard(catalogoCard.titulo || '') + '">'
+    + '</div>';
+
+  if (selecoes.length) {
+    html += '<div class="pd-selector-custom-titulo">Nomes dos indicadores</div><div class="pd-selector-custom-metricas">';
+    selecoes.forEach(function(selecao, slotIndex) {
+      var metrica = obterMetricaCatalogoGlobalDepatri_(selecao.fonteCardId, selecao.metricaId);
+      if (!metrica) return;
+      var fonteCard = obterCatalogoCardProdutividadeDepatri_(selecao.fonteCardId);
+      var rotuloPadrao = metrica.rotulo || metrica.id || '';
+      var valor = selecao.rotuloPersonalizado || rotuloPadrao;
+      var descricao = (fonteCard && fonteCard.titulo ? fonteCard.titulo + ' — ' : '') + rotuloPadrao;
+      html += '<div class="pd-selector-custom-campo">'
+        + '<label>Contador ' + (slotIndex + 1) + ': ' + escDashboard(descricao) + '</label>'
+        + '<input type="text" maxlength="100" class="form-control form-control-sm pd-card-rotulo"'
+        + ' data-slot-index="' + slotIndex + '"'
+        + ' data-fonte-card-id="' + escDashboard(selecao.fonteCardId) + '"'
+        + ' data-metrica-id="' + escDashboard(selecao.metricaId) + '"'
+        + ' data-rotulo-padrao="' + escDashboard(rotuloPadrao) + '"'
+        + ' value="' + escDashboard(valor) + '" placeholder="' + escDashboard(rotuloPadrao) + '">'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  custom.innerHTML = html;
+  custom.style.display = '';
+}
+
+
+function fecharEditorPainelDepatri() {
+  fecharSeletorContadorDepatri_();
+  var box = document.getElementById('dashEditorDepatri');
+  if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+  DASHBOARD_PORTAL_STATE.painelEditorContador = null;
+  DASHBOARD_PORTAL_STATE.salvandoConfig = false;
+}
+
+
+function salvarEditorPainelDepatri() {
+  if (!DASHBOARD_PORTAL_STATE.painelCanEdit) return alert('Apenas a DIREÇÃO ou o ADMIN podem editar.');
+  if (DASHBOARD_PORTAL_STATE.salvandoConfig) return;
+  var visao = ((document.getElementById('dashVisao') || {}).value || '');
+  var cfg = DASHBOARD_PORTAL_STATE.painelConfig && DASHBOARD_PORTAL_STATE.painelConfig.config && DASHBOARD_PORTAL_STATE.painelConfig.config[visao];
+  var nome = ((document.getElementById('pdEditNomeUnidade') || {}).value || (cfg && cfg.nome) || '').trim();
+  var cards = [];
+
+  if (['DRF', 'DRFV', 'DAS', 'DDF'].indexOf(visao) > -1) {
+    cards = payloadContadoresLivresDepatri_();
+    if (!cards.length) return alert('Selecione pelo menos um contador.');
+  } else {
+    var rows = document.querySelectorAll('[data-pd-edit-row]');
+    Array.prototype.forEach.call(rows, function(row) {
+      cards.push({
+        ativo: !!(row.querySelector('.pd-edit-ativo') && row.querySelector('.pd-edit-ativo').checked),
+        ordem: Number((row.querySelector('.pd-edit-ordem') || {}).value || 999),
+        crimeChave: ((row.querySelector('.pd-edit-chave') || {}).value || '').trim(),
+        crimeExibicao: ((row.querySelector('.pd-edit-exibicao') || {}).value || '').trim(),
+        icone: ((row.querySelector('.pd-edit-icone') || {}).value || '').trim()
+      });
+    });
+  }
+
+  var btnSalvar = document.getElementById('pdSalvarEditorPainel');
+  DASHBOARD_PORTAL_STATE.salvandoConfig = true;
+  if (btnSalvar) {
+    btnSalvar.disabled = true;
+    btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+  }
+
+  google.script.run
+    .withSuccessHandler(function(ret) {
+      DASHBOARD_PORTAL_STATE.salvandoConfig = false;
+      fecharEditorPainelDepatri();
+      alert((ret && ret.mensagem) || 'Configuração salva.');
+      carregarConfigPainelDepatriPortal_();
+    })
+    .withFailureHandler(function(err) {
+      DASHBOARD_PORTAL_STATE.salvandoConfig = false;
+      if (btnSalvar) {
+        btnSalvar.disabled = false;
+        btnSalvar.innerHTML = '<i class="fas fa-save"></i> Salvar configuração';
+      }
+      if (typeof console !== 'undefined' && console.error) {
+        console.error('[DEPATRI] Falha ao salvar a configuração do painel:', err);
+      }
+      alert((err && err.message) || err || 'Erro ao salvar configuração.');
+    })
+    .salvarDashboardDepatriConfig(usuarioAtual.login, { unidade: visao, nome: nome, cards: cards });
+}
+
+
+// ============================================================================
+// UTILITÁRIOS E GRÁFICOS GERAIS
+// ============================================================================
+function escDashboard(texto) {
+  return String(texto == null ? '' : texto)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+
+function formatNumeroDashboard(valor, casas) {
+  var numero = Number(valor || 0);
+  return numero.toLocaleString('pt-BR', { minimumFractionDigits: casas || 0, maximumFractionDigits: casas || 0 });
+}
+
+
+function formatMoedaDashboard(valor) {
+  var numero = Number(valor || 0);
+  return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+
+function formatValorCardDashboard(valor, tipo) {
+  if (tipo === 'moeda') return formatMoedaDashboard(valor);
+  if (tipo === 'numero_2') return formatNumeroDashboard(valor, 2);
+  return formatNumeroDashboard(valor, 0);
+}
+
+
+function getChartDashboard(id) {
+  var el = document.getElementById(id);
+  if (!el || !window.echarts) return null;
+  if (!DASHBOARD_PORTAL_STATE.charts[id]) DASHBOARD_PORTAL_STATE.charts[id] = echarts.init(el, null, { renderer: 'canvas' });
+  return DASHBOARD_PORTAL_STATE.charts[id];
+}
+
+
+function destruirChartsDashboardPortal_() {
+  Object.keys(DASHBOARD_PORTAL_STATE.charts || {}).forEach(function(id) {
+    try { DASHBOARD_PORTAL_STATE.charts[id].dispose(); } catch (e) {}
+  });
+  DASHBOARD_PORTAL_STATE.charts = {};
+}
+
+
+function baseOptionDashboard() {
+  return { backgroundColor: 'transparent', animationDuration: 500, textStyle: { color: '#f8f9fa' }, tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } }, grid: { left: 40, right: 20, top: 35, bottom: 40, containLabel: true } };
+}
+
+
+function setOptionDashboard(id, option) {
+  var chart = getChartDashboard(id);
+  if (!chart) return;
+  chart.setOption(option, true);
+}
+
+
+function renderChartApreensoes(lista) {
+  var base = baseOptionDashboard();
+  setOptionDashboard('chartApreensoes', Object.assign(base, { xAxis: { type: 'category', data: (lista || []).map(function(i) { return i.nome; }), axisLabel: { color: '#adb5bd', interval: 0, rotate: 15 } }, yAxis: { type: 'value', axisLabel: { color: '#adb5bd' } }, series: [{ type: 'bar', data: (lista || []).map(function(i) { return i.valor; }), barMaxWidth: 42, itemStyle: { borderRadius: [8, 8, 0, 0] } }] }));
+}
+
+
+function renderChartFiosComparativo(data) {
+  var base = baseOptionDashboard();
+  setOptionDashboard('chartFiosComparativo', Object.assign(base, { legend: { top: 0, textStyle: { color: '#f8f9fa' } }, tooltip: { trigger: 'axis', formatter: function(params) { var linhas = []; if (params && params.length) { linhas.push(params[0].axisValue); params.forEach(function(p) { linhas.push(p.marker + ' ' + p.seriesName + ': ' + formatMoedaDashboard(p.value)); }); } return linhas.join('<br>'); } }, xAxis: { type: 'category', data: (data.meses || []).map(function(m) { return m; }), axisLabel: { color: '#adb5bd', interval: 0, rotate: 20 } }, yAxis: { type: 'value', axisLabel: { color: '#adb5bd' } }, series: [{ name: '2025', type: 'bar', data: data.serie2025 || [], barMaxWidth: 24 }, { name: '2026', type: 'bar', data: data.serie2026 || [], barMaxWidth: 24 }] }));
+}
+
+
+function renderChartInqueritos(data) {
+  var instaurados = data.instaurados || [], concluidos = data.concluidos || [], mapa = {};
+  instaurados.forEach(function(i) { mapa[i.nome] = mapa[i.nome] || { inst: 0, conc: 0 }; mapa[i.nome].inst = i.valor; });
+  concluidos.forEach(function(i) { mapa[i.nome] = mapa[i.nome] || { inst: 0, conc: 0 }; mapa[i.nome].conc = i.valor; });
+  var categorias = Object.keys(mapa).sort(function(a, b) { return ((mapa[b].inst || 0) + (mapa[b].conc || 0)) - ((mapa[a].inst || 0) + (mapa[a].conc || 0)); }).slice(0, 12);
+  var base = baseOptionDashboard();
+  setOptionDashboard('chartInqueritos', Object.assign(base, { legend: { top: 0, textStyle: { color: '#f8f9fa' } }, xAxis: { type: 'value', axisLabel: { color: '#adb5bd' } }, yAxis: { type: 'category', data: categorias, axisLabel: { color: '#adb5bd' } }, series: [{ name: 'Instaurados', type: 'bar', data: categorias.map(function(c) { return mapa[c].inst || 0; }), barMaxWidth: 20 }, { name: 'Concluídos', type: 'bar', data: categorias.map(function(c) { return mapa[c].conc || 0; }), barMaxWidth: 20 }] }));
+}
+
+
+function renderChartRepresentacoes(lista) { var base = baseOptionDashboard(); setOptionDashboard('chartRepresentacoes', Object.assign(base, { xAxis: { type: 'category', data: (lista || []).map(function(i) { return i.nome; }), axisLabel: { color: '#adb5bd', interval: 0, rotate: 10 } }, yAxis: { type: 'value', axisLabel: { color: '#adb5bd' } }, series: [{ type: 'bar', data: (lista || []).map(function(i) { return i.valor; }), barMaxWidth: 42 }] })); }
+function renderChartIndiciamentos(lista) { var base = baseOptionDashboard(); setOptionDashboard('chartIndiciamentos', Object.assign(base, { xAxis: { type: 'category', data: (lista || []).map(function(i) { return i.nome; }), axisLabel: { color: '#adb5bd', interval: 0, rotate: 12 } }, yAxis: { type: 'value', axisLabel: { color: '#adb5bd' } }, series: [{ type: 'bar', data: (lista || []).map(function(i) { return i.valor; }), barMaxWidth: 42 }] })); }
+function renderChartPrisoesDelegacia(lista) { var base = baseOptionDashboard(); setOptionDashboard('chartPrisoesDelegacia', Object.assign(base, { xAxis: { type: 'value', axisLabel: { color: '#adb5bd' } }, yAxis: { type: 'category', data: (lista || []).map(function(i) { return i.nome; }), axisLabel: { color: '#adb5bd' } }, series: [{ type: 'bar', data: (lista || []).map(function(i) { return i.valor; }), barMaxWidth: 18 }] })); }
+
+
+function renderChartPrisoesModalidade(lista) {
+  var chart = getChartDashboard('chartPrisoesModalidade');
+  if (!chart) return;
+  chart.setOption({ backgroundColor: 'transparent', tooltip: { trigger: 'item' }, legend: { bottom: 0, textStyle: { color: '#f8f9fa' } }, series: [{ type: 'pie', radius: ['42%', '68%'], center: ['50%', '45%'], itemStyle: { borderRadius: 8 }, data: (lista || []).map(function(i) { return { name: i.nome, value: i.valor }; }), label: { color: '#f8f9fa' } }] }, true);
+}
+
+
+function renderChartPrisoesTipoPenal(lista) { var base = baseOptionDashboard(); setOptionDashboard('chartPrisoesTipoPenal', Object.assign(base, { xAxis: { type: 'value', axisLabel: { color: '#adb5bd' } }, yAxis: { type: 'category', data: (lista || []).map(function(i) { return i.nome; }), axisLabel: { color: '#adb5bd' } }, series: [{ type: 'bar', data: (lista || []).map(function(i) { return i.valor; }), barMaxWidth: 18 }] })); }
+function renderChartPrisoesTempo(lista) { var base = baseOptionDashboard(); setOptionDashboard('chartPrisoesTempo', Object.assign(base, { xAxis: { type: 'category', data: (lista || []).map(function(i) { return i.nome; }), axisLabel: { color: '#adb5bd' } }, yAxis: { type: 'value', axisLabel: { color: '#adb5bd' } }, series: [{ type: 'line', smooth: true, areaStyle: {}, data: (lista || []).map(function(i) { return i.valor; }) }] })); }
+
+
+function renderChartDemandasEvolucao(lista) {
+  var chart = getChartDashboard('chartDemandasEvolucao');
+  if (!chart) return;
+  chart.setOption({ backgroundColor: 'transparent', tooltip: { trigger: 'item' }, legend: { bottom: 0, textStyle: { color: '#f8f9fa' } }, series: [{ type: 'pie', radius: ['42%', '68%'], center: ['50%', '45%'], data: (lista || []).map(function(i) { return { name: i.nome, value: i.valor }; }), label: { color: '#f8f9fa' } }] }, true);
+}
+
+
+function renderChartDemandasStatus(lista) { var base = baseOptionDashboard(); setOptionDashboard('chartDemandasStatus', Object.assign(base, { xAxis: { type: 'category', data: (lista || []).map(function(i) { return i.nome; }), axisLabel: { color: '#adb5bd', interval: 0, rotate: 12 } }, yAxis: { type: 'value', axisLabel: { color: '#adb5bd' } }, series: [{ type: 'bar', data: (lista || []).map(function(i) { return i.valor; }), barMaxWidth: 36 }] })); }
+
+
+function renderChartEquipes(lista) {
+  var categorias = (lista || []).map(function(i) { return i.nome; });
+  var base = baseOptionDashboard();
+  setOptionDashboard('chartEquipes', Object.assign(base, { legend: { type: 'scroll', top: 0, textStyle: { color: '#f8f9fa' } }, xAxis: { type: 'category', data: categorias, axisLabel: { color: '#adb5bd', interval: 0, rotate: 12 } }, yAxis: { type: 'value', axisLabel: { color: '#adb5bd' } }, series: [ { name: 'Demandas evoluídas', type: 'bar', data: (lista || []).map(function(i) { return i.dados.evoluidas; }) }, { name: 'Relatórios', type: 'bar', data: (lista || []).map(function(i) { return i.dados.relatorios; }) }, { name: 'Suspeitos identificados', type: 'bar', data: (lista || []).map(function(i) { return i.dados.suspeitosIdentificados; }) }, { name: 'Suspeitos presos', type: 'bar', data: (lista || []).map(function(i) { return i.dados.suspeitosPresos; }) }, { name: 'Veículos rec./apr.', type: 'bar', data: (lista || []).map(function(i) { return i.dados.veiculos; }) }, { name: 'Armas', type: 'bar', data: (lista || []).map(function(i) { return i.dados.armas; }) } ] }));
+}
+
+
+function filtrarTabelaDashboardPortal() {
+  var termo = ((document.getElementById('dashFiltroTabela') || {}).value || '').trim().toUpperCase();
+  DASHBOARD_PORTAL_STATE.pesquisaTabela = termo;
+
+
+  var linhas = (DASHBOARD_PORTAL_STATE.tabelaCompleta || []).filter(function(item) {
+    if (!termo) return true;
+    var texto = [item.data, item.delegacia, item.ano, item.mes, item.tipoDado, item.categoriaPrincipal, item.subcategoria, item.equipe, item.status, item.procedimento].join(' ').toUpperCase();
+    return texto.indexOf(termo) > -1;
+  });
+
+
+  var body = document.getElementById('dashTabelaBody');
+  if (!body) return;
+
+
+  if (!linhas.length) {
+    body.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Nenhum registro encontrado para o filtro atual.</td></tr>';
+  } else {
+    body.innerHTML = linhas.map(function(item) {
+      return '<tr>'
+        + '<td>' + escDashboard(item.data || '') + '</td>'
+        + '<td>' + escDashboard(item.delegacia || '') + '</td>'
+        + '<td>' + escDashboard(item.ano || '') + '</td>'
+        + '<td>' + escDashboard(item.mes || '') + '</td>'
+        + '<td>' + escDashboard(item.tipoDado || '') + '</td>'
+        + '<td>' + escDashboard(item.categoriaPrincipal || '') + '</td>'
+        + '<td>' + escDashboard(item.subcategoria || '') + '</td>'
+        + '<td class="text-end">' + formatNumeroDashboard(item.quantidade || 0, 0) + '</td>'
+        + '<td class="text-end">' + (Number(item.valor || 0) > 0 ? formatMoedaDashboard(item.valor || 0) : '-') + '</td>'
+        + '<td>' + escDashboard(item.equipe || '') + '</td>'
+        + '<td>' + escDashboard(item.status || '') + '</td>'
+        + '<td>' + escDashboard(item.procedimento || '') + '</td>'
+        + '</tr>';
+    }).join('');
+  }
+
+
+  var resumo = document.getElementById('dashResumoTabela');
+  if (resumo) resumo.innerHTML = 'Registros exibidos: ' + formatNumeroDashboard(linhas.length, 0);
+}
+
+
+function resizeChartsDashboardPortal() {
+  Object.keys(DASHBOARD_PORTAL_STATE.charts || {}).forEach(function(id) { try { DASHBOARD_PORTAL_STATE.charts[id].resize(); } catch (e) {} });
+}
+
+
+function iniciarAutoRefreshDashboardPortal() {
+  if (DASHBOARD_PORTAL_STATE.intervalo) return;
+  DASHBOARD_PORTAL_STATE.intervalo = setInterval(function() {
+    var tela = document.getElementById('modDashboard');
+    if (!tela || tela.style.display === 'none') return;
+    carregarDadosDashboardPortal();
+  }, 120000);
+}
+
+
+function __dashboardNotifySave__() {
+  var tela = document.getElementById('modDashboard');
+  if (!tela || tela.style.display === 'none') return;
+  carregarDadosDashboardPortal(true);
+}
+
+
+window.addEventListener('resize', function() { resizeChartsDashboardPortal(); });
+</script>

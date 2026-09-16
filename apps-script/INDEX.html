@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<!-- HOME DEPATRI INSTITUCIONAL 2026-07-21 | layout consolidado no INDEX -->
+<html lang="pt-BR">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>Portal DEPATRI</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <style>
+    
+    /* IDENTIDADE VISUAL: DARK & GOLD */
+    :root {
+      --bg-dark: #121212;
+      --bg-card: #1e1e1e;
+      --gold-primary: #d4af37;
+      --gold-hover: #b5952f;
+      --text-light: #f8f9fa;
+      --text-muted: #adb5bd;
+      --home-bg: #070807;
+      --home-card: #111210;
+      --home-card-soft: #191a17;
+      --home-gold: #c9a33b;
+      --home-gold-light: #ebd47b;
+      --home-border: rgba(201, 163, 59, .48);
+      --home-text: #f4f1e7;
+      --home-muted: #b8b4aa;
+      --home-fundo-institucional-url: none;
+    }
+
+    html, body {
+      color-scheme: dark;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Navbar Customizada */
+    .navbar {
+      background-color: #000000;
+      border-bottom: 2px solid var(--gold-primary);
+    }
+
+    .navbar-brand {
+      color: var(--gold-primary) !important;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .nav-link {
+      color: var(--text-light) !important;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: var(--gold-primary) !important;
+    }
+    .nc-switch {
+  background-color: #2f2f2f !important;
+  border-color: #555 !important;
+}
+
+   .nc-switch:checked {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+   .nc-switch:focus {
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+}
+
+   .evolucao-switch {
+  background-color: #2f2f2f !important;
+  border-color: #6c5a22 !important;
+}
+
+   .evolucao-switch:checked {
+  background-color: var(--gold-primary) !important;
+  border-color: var(--gold-primary) !important;
+}
+
+   .evolucao-switch:focus {
+  box-shadow: 0 0 0 0.25rem rgba(212, 175, 55, 0.25) !important;
+}
+
+    /* Cards e Containers */
+    .card-depatri {
+      background-color: var(--bg-card);
+      border: 1px solid #333;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+    }
+
+    .card-header-gold {
+      background-color: transparent;
+      border-bottom: 1px solid var(--gold-primary);
+      color: var(--gold-primary);
+      font-weight: bold;
+    }
+
+    .text-gold {
+      color: var(--gold-primary) !important;
+    }
+
+    /* Correção de Legibilidade nos Formulários */
+    .form-label,
+    .form-check-label,
+    label {
+      color: #f8f9fa !important;
+      font-weight: 500;
+    }
+
+    p.text-muted,
+    .text-muted,
+    small.text-muted {
+      color: #adb5bd !important;
+    }
+
+    /* Botões */
+    .btn-gold {
+      background-color: var(--gold-primary);
+      color: #000 !important;
+      font-weight: 600;
+      border: none;
+    }
+
+    .btn-gold:hover {
+      background-color: var(--gold-hover);
+      color: #000 !important;
+    }
+    
+    /* Inputs Form */
+    .form-control,
+    .form-select,
+    input,
+    select,
+    textarea {
+      background-color: #2a2a2a !important;
+      border: 1px solid #444 !important;
+      color: var(--text-light) !important;
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    input:focus,
+    select:focus,
+    textarea:focus {
+      background-color: #333 !important;
+      border-color: var(--gold-primary) !important;
+      box-shadow: 0 0 0 0.25rem rgba(212, 175, 55, 0.25) !important;
+      color: var(--text-light) !important;
+    }
+
+    .form-control::placeholder,
+    textarea::placeholder,
+    input::placeholder {
+      color: #adb5bd !important;
+      opacity: 1;
+    }
+
+    .form-select option,
+    select option {
+      background-color: #2a2a2a;
+      color: #f8f9fa;
+    }
+
+    .form-select option:disabled,
+    select option:disabled {
+      color: #adb5bd;
+    }
+
+    /* Garantia para campos dinâmicos */
+    #containerContadores label,
+    #containerContadores .form-label,
+    #containerContadores .form-check-label,
+    #containerContadores input,
+    #containerContadores select,
+    #containerContadores textarea,
+    #containerContadores .form-control,
+    #containerContadores .form-select,
+    #containerContadores span,
+    #containerContadores div {
+      color: #f8f9fa !important;
+    }
+
+    #containerContadores input:not(.nc-switch),
+    #containerContadores select,
+    #containerContadores textarea,
+    #containerContadores .form-control:not(.nc-switch),
+    #containerContadores .form-select {
+      background-color: #2a2a2a !important;
+      border: 1px solid #444 !important;
+    }
+    #containerContadores .nc-switch {
+  background-color: #2f2f2f !important;
+  border-color: #555 !important;
+}
+
+#containerContadores .nc-switch:checked {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+#containerContadores .nc-switch:focus {
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+}
+
+    #containerContadores input:focus,
+    #containerContadores select:focus,
+    #containerContadores textarea:focus,
+    #containerContadores .form-control:focus,
+    #containerContadores .form-select:focus {
+      background-color: #333 !important;
+      border-color: var(--gold-primary) !important;
+      color: #f8f9fa !important;
+      box-shadow: 0 0 0 0.25rem rgba(212, 175, 55, 0.25) !important;
+    }
+
+    /* Controle de Telas (Single Page Application) */
+    .tela-sistema { display: none; }
+    .tela-ativa { display: block; animation: fadeIn 0.4s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  
+    /* DASHBOARD */
+    .dashboard-kpi-card {
+      background: linear-gradient(180deg, rgba(36,36,36,0.95) 0%, rgba(24,24,24,0.95) 100%);
+      border: 1px solid #333;
+      border-radius: 14px;
+      min-height: 145px;
+      padding: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dashboard-kpi-card::after {
+      content: '';
+      position: absolute;
+      inset: auto -40px -40px auto;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.01) 70%);
+    }
+
+    .dashboard-kpi-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(212,175,55,0.12);
+      color: var(--gold-primary);
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+    }
+
+    .dashboard-kpi-title {
+      color: #adb5bd;
+      font-size: 0.86rem;
+      min-height: 38px;
+      line-height: 1.2rem;
+      margin-bottom: 8px;
+    }
+
+    .dashboard-kpi-value {
+      color: #f8f9fa;
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .dashboard-chart {
+      width: 100%;
+      height: 340px;
+    }
+
+    .dashboard-chart.chart-sm {
+      height: 300px;
+    }
+
+    .dashboard-chart-title {
+      color: var(--gold-primary);
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+
+    .dashboard-table th {
+      white-space: nowrap;
+      font-size: 0.85rem;
+    }
+
+    .dashboard-table td {
+      font-size: 0.84rem;
+      vertical-align: middle;
+    }
+
+  
+
+    /* ======================================================================
+       HOME DEPATRI INSTITUCIONAL - CSS ÚNICO E CONSOLIDADO
+       ====================================================================== */
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(201,163,59,.12), transparent 34%),
+        linear-gradient(135deg, #030403 0%, #090a09 52%, #0c0b07 100%);
+      background-attachment: fixed;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: .18;
+      background-image:
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(circle at center, #000 0%, transparent 82%);
+    }
+
+    .navbar .navbar-nav > li:not(.nav-home-depatri):not(.ai-menu-item) {
+      display: none !important;
+    }
+
+    .depatri-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 1040;
+      min-height: 84px;
+      margin-bottom: 0 !important;
+      padding: 0;
+      background: rgba(3,4,3,.985) !important;
+      border-bottom: 1px solid rgba(201,163,59,.62) !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,.28);
+    }
+
+    .depatri-topbar .container-fluid {
+      min-height: 84px;
+      padding: 0 clamp(18px, 2.5vw, 48px);
+      gap: 22px;
+    }
+
+    .depatri-topbar-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 13px;
+      min-width: max-content;
+      color: var(--home-text) !important;
+      text-decoration: none;
+    }
+
+    .depatri-topbar-crest {
+      display: block;
+      width: 58px;
+      height: 62px;
+      object-fit: contain;
+      flex: 0 0 58px;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.55));
+    }
+
+    .depatri-topbar-brand-copy {
+      display: grid;
+      gap: 1px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .depatri-topbar-brand-copy small {
+      color: var(--home-gold-light);
+      font-size: .72rem;
+      font-weight: 850;
+      letter-spacing: .34em;
+    }
+
+    .depatri-topbar-brand-copy strong {
+      color: #fff;
+      font-size: 1.18rem;
+      font-weight: 850;
+      letter-spacing: .30em;
+    }
+
+    .depatri-topbar .nav-home-depatri {
+      display: none !important;
+    }
+
+    .depatri-topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .depatri-topbar-action {
+      width: 44px;
+      height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-right: 1px solid rgba(201,163,59,.25);
+      border-radius: 0;
+      color: var(--home-gold-light);
+      background: transparent;
+      transition: color .18s ease, background .18s ease;
+    }
+
+    .depatri-topbar-action:hover,
+    .depatri-topbar-action:focus-visible {
+      color: #fff0a8;
+      background: rgba(201,163,59,.09);
+      outline: 1px solid rgba(201,163,59,.46);
+      outline-offset: -1px;
+    }
+
+    .depatri-topbar-user-button {
+      min-height: 52px;
+      max-width: min(430px, 42vw);
+      padding: 5px 11px !important;
+      border: 0 !important;
+      border-radius: 12px !important;
+      color: var(--home-text) !important;
+      background: transparent !important;
+    }
+
+    .depatri-topbar-user-avatar {
+      width: 46px;
+      height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 46px;
+      border: 1px solid rgba(201,163,59,.48);
+      border-radius: 50%;
+      color: var(--home-gold-light);
+      background: radial-gradient(circle, rgba(201,163,59,.18), rgba(0,0,0,.8));
+      font-size: 1.25rem;
+    }
+
+    #userInfo {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+      text-align: left;
+      line-height: 1.15;
+    }
+
+    #userInfo .depatri-topbar-user-primary,
+    #userInfo b {
+      overflow: hidden;
+      color: #fff;
+      font-size: .76rem;
+      font-weight: 850;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    #userInfo .depatri-topbar-user-secondary {
+      overflow: hidden;
+      color: var(--home-muted);
+      font-size: .72rem;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    #modHomeDepatri {
+      width: 100%;
+      overflow: clip;
+    }
+
+    #modHomeDepatri > .depatri-home-shell,
+    .depatri-home-shell {
+      width: min(1720px, calc(100% - 40px));
+      max-width: 1720px;
+      margin: 24px auto 0;
+      padding: 0 0 46px;
+    }
+
+    .depatri-home-layout {
+      display: grid;
+      grid-template-columns: 310px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+      width: 100%;
+    }
+
+    .depatri-home-main {
+      min-width: 0;
+      width: 100%;
+      max-width: none;
+    }
+
+    .depatri-user-panel {
+      position: sticky;
+      top: 108px;
+      align-self: start;
+      width: 100%;
+      padding: 18px;
+      border: 1px solid rgba(201,163,59,.55);
+      border-radius: 18px;
+      color: var(--home-text);
+      background: linear-gradient(145deg, rgba(24,24,22,.98), rgba(8,8,8,.99));
+      box-shadow: 0 18px 40px rgba(0,0,0,.30);
+    }
+
+    .depatri-user-head {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 8px 2px 18px;
+      border-bottom: 1px solid rgba(201,163,59,.25);
+    }
+
+    .depatri-user-avatar {
+      width: 66px;
+      height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 66px;
+      border: 1px solid rgba(201,163,59,.55);
+      border-radius: 50%;
+      color: var(--home-gold-light);
+      background: radial-gradient(circle, rgba(201,163,59,.20), rgba(0,0,0,.80));
+      font-size: 1.75rem;
+    }
+
+    .depatri-user-kicker {
+      margin-bottom: 6px;
+      color: var(--home-gold-light);
+      font-size: .74rem;
+      font-weight: 900;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+    }
+
+    .depatri-user-name {
+      color: #fff;
+      font-size: .94rem;
+      font-weight: 900;
+      line-height: 1.32;
+      text-transform: uppercase;
+    }
+
+    .depatri-user-profile {
+      margin-top: 4px;
+      color: var(--home-muted);
+      font-size: .78rem;
+      font-weight: 700;
+      line-height: 1.3;
+      text-transform: uppercase;
+    }
+
+    .depatri-home-indicators {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .depatri-side-card {
+      padding: 17px;
+      border: 1px solid rgba(201,163,59,.34);
+      border-radius: 17px;
+      color: #fff;
+      background: linear-gradient(145deg, rgba(32,32,30,.98), rgba(13,13,12,.99));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+    }
+
+    .depatri-side-card-head {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 13px;
+      color: var(--home-gold-light);
+      font-size: .84rem;
+      font-weight: 900;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .depatri-side-card-icon {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 42px;
+      border: 1px solid rgba(201,163,59,.36);
+      border-radius: 13px;
+      color: var(--home-gold-light);
+      background: rgba(201,163,59,.12);
+      font-size: 1rem;
+    }
+
+    .depatri-side-value {
+      margin: 7px 0;
+      color: #fff;
+      font-size: 2.65rem;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .depatri-side-cycle {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 5px 9px;
+      border: 1px solid rgba(201,163,59,.48);
+      border-radius: 8px;
+      color: var(--home-gold-light);
+      font-size: .72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .depatri-side-empty {
+      padding: 5px 0 2px;
+      color: #e4e4e4;
+      font-size: .84rem;
+      line-height: 1.5;
+    }
+
+    .depatri-side-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .depatri-side-list-item {
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      color: #f1f1f1;
+      font-size: .82rem;
+      line-height: 1.4;
+    }
+
+    .depatri-side-list-item:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .depatri-side-meta {
+      margin-top: 2px;
+      color: #b9b9b9;
+      font-size: .75rem;
+    }
+
+    .depatri-side-count {
+      color: var(--home-gold-light);
+      font-size: 1.65rem;
+      font-weight: 950;
+    }
+
+    .depatri-home-profile-note {
+      padding: 14px 3px 4px;
+      color: #d8d8d8;
+      font-size: .84rem;
+      line-height: 1.5;
+    }
+
+    .depatri-hero {
+      position: relative;
+      isolation: isolate;
+      width: 100%;
+      height: 620px;
+      min-height: 620px;
+      aspect-ratio: auto;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 28px;
+      border: 1px solid rgba(201,163,59,.52);
+      border-radius: 18px;
+      text-align: center;
+      background-color: #050605;
+      background-image: var(--home-fundo-institucional-url);
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      box-shadow: 0 20px 50px rgba(0,0,0,.30);
+    }
+
+    .depatri-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at center, rgba(0,0,0,.03), rgba(0,0,0,.12));
+    }
+
+    .depatri-hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      box-shadow: inset 0 0 45px rgba(0,0,0,.20);
+    }
+
+    .depatri-hero-inner {
+      position: relative;
+      z-index: 2;
+      width: min(100%, 980px);
+      margin: 0 auto;
+    }
+
+    .depatri-logo-frame {
+      width: auto;
+      height: auto;
+      margin: 0 auto 3px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .depatri-hero-brasao-3d {
+      display: block;
+      width: auto;
+      height: clamp(145px, 10vw, 180px);
+      max-width: min(260px, 30vw);
+      max-height: 180px;
+      object-fit: contain;
+      object-position: center;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      mix-blend-mode: normal;
+      transform: none !important;
+      rotate: none !important;
+      filter: drop-shadow(0 8px 20px rgba(0,0,0,.65)) drop-shadow(0 0 10px rgba(201,163,59,.14));
+    }
+
+    .depatri-logo-fallback {
+      min-height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--home-gold-light);
+      font-weight: 900;
+      letter-spacing: 1px;
+      background: transparent;
+    }
+
+    .depatri-hero-kicker {
+      margin-bottom: 5px;
+      color: var(--home-gold-light);
+      font-size: clamp(.68rem, .9vw, .82rem);
+      font-weight: 850;
+      letter-spacing: .42em;
+      text-transform: uppercase;
+      text-shadow: 0 3px 12px rgba(0,0,0,.78);
+    }
+
+    .depatri-hero-title {
+      margin: 0;
+      color: #e6c767;
+      font-size: clamp(52px, 6vw, 88px);
+      font-weight: 900;
+      letter-spacing: .11em;
+      line-height: .92;
+      text-indent: .11em;
+      text-shadow: 0 6px 22px rgba(0,0,0,.80), 0 0 16px rgba(202,164,58,.16);
+    }
+
+    .depatri-hero-subtitle {
+      max-width: 850px;
+      margin: 9px auto 0;
+      color: #f4f1e7;
+      font-size: clamp(.72rem, 1.05vw, .95rem);
+      font-weight: 750;
+      letter-spacing: .105em;
+      line-height: 1.3;
+      text-transform: uppercase;
+      text-shadow: 0 3px 12px rgba(0,0,0,.9);
+    }
+
+    .depatri-hero-line {
+      display: none;
+    }
+
+    .depatri-hero-caption {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 11px;
+      padding: 8px 15px;
+      border: 1px solid rgba(201,163,59,.48);
+      border-radius: 999px;
+      color: #e5d594;
+      background: rgba(0,0,0,.52);
+      font-size: clamp(.7rem, .9vw, .82rem);
+      box-shadow: 0 8px 20px rgba(0,0,0,.22);
+    }
+
+    .depatri-section-title {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin: 24px 0 14px;
+      padding: 0 8px 10px;
+      border-bottom: 1px solid rgba(201,163,59,.27);
+    }
+
+    .depatri-section-heading {
+      position: relative;
+      padding-left: 17px;
+    }
+
+    .depatri-section-heading::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      bottom: 2px;
+      left: 0;
+      width: 5px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ebd47b, #a87617);
+      box-shadow: 0 0 12px rgba(201,163,59,.22);
+    }
+
+    .depatri-section-title h3 {
+      margin: 0;
+      color: var(--home-gold-light);
+      font-size: clamp(1.15rem, 1.65vw, 1.62rem);
+      font-weight: 850;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+    }
+
+    .depatri-section-title .small {
+      margin-top: 2px;
+      color: var(--home-muted) !important;
+    }
+
+    .depatri-module-search {
+      width: min(330px, 100%);
+      height: 42px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      border: 1px solid rgba(201,163,59,.25);
+      border-radius: 12px;
+      color: var(--home-gold-light);
+      background: rgba(18,19,17,.88);
+    }
+
+    .depatri-module-search input {
+      width: 100%;
+      min-width: 0;
+      padding: 0 !important;
+      border: 0 !important;
+      outline: 0 !important;
+      color: var(--home-text) !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      font-size: .88rem;
+    }
+
+    .depatri-module-search input::placeholder {
+      color: #8f8b82 !important;
+    }
+
+    .depatri-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .depatri-subgrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .depatri-module-card {
+      position: relative;
+      min-height: 148px;
+      padding: 18px 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(201,163,59,.48);
+      border-radius: 16px;
+      color: var(--home-text);
+      text-align: center;
+      cursor: pointer;
+      background: linear-gradient(145deg, rgba(29,30,27,.98), rgba(10,10,9,.99));
+      box-shadow: 0 14px 30px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.025);
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .depatri-module-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, rgba(255,255,255,.025), transparent 48%, rgba(201,163,59,.035));
+    }
+
+    .depatri-module-card:hover,
+    .depatri-module-card:focus-visible {
+      transform: translateY(-4px);
+      border-color: rgba(231,197,91,.82);
+      outline: 0;
+      box-shadow: 0 18px 34px rgba(0,0,0,.34), 0 0 18px rgba(202,164,58,.08);
+    }
+
+    .depatri-module-card[hidden] {
+      display: none !important;
+    }
+
+    .depatri-module-card.disabled {
+      opacity: .42;
+      cursor: not-allowed;
+      filter: grayscale(.4);
+    }
+
+    .depatri-module-icon {
+      position: relative;
+      z-index: 1;
+      min-height: 48px;
+      margin: 0 auto 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #d5ad50;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      font-size: 2.35rem;
+    }
+
+    .depatri-module-title {
+      position: relative;
+      z-index: 1;
+      color: #fff;
+      font-size: .92rem;
+      font-weight: 850;
+      letter-spacing: .75px;
+      line-height: 1.15;
+      text-transform: uppercase;
+    }
+
+    .depatri-module-desc {
+      position: relative;
+      z-index: 1;
+      margin-top: 7px;
+      color: var(--home-muted);
+      font-size: .75rem;
+      line-height: 1.35;
+    }
+
+    .depatri-module-empty {
+      grid-column: 1 / -1;
+      padding: 24px;
+      border: 1px dashed rgba(201,163,59,.32);
+      border-radius: 14px;
+      color: var(--home-muted);
+      text-align: center;
+      background: rgba(10,10,9,.72);
+    }
+
+    .depatri-module-empty[hidden] {
+      display: none !important;
+    }
+
+    .depatri-back-btn {
+      border: 1px solid rgba(201,163,59,.45) !important;
+      color: var(--home-gold-light) !important;
+      background: rgba(0,0,0,.22) !important;
+    }
+
+    .depatri-alert-gold {
+      padding: 16px 18px;
+      border: 1px solid rgba(201,163,59,.46);
+      border-left: 6px solid var(--home-gold);
+      border-radius: 16px;
+      color: #f7f1df;
+      background: linear-gradient(135deg, rgba(201,163,59,.16), rgba(20,20,20,.94));
+      box-shadow: 0 10px 26px rgba(0,0,0,.35);
+    }
+
+    .depatri-alert-gold .depatri-alert-title {
+      margin-bottom: 4px;
+      color: var(--home-gold-light);
+      font-weight: 900;
+      letter-spacing: .9px;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 1500px) {
+      .depatri-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 1180px) {
+      .depatri-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 980px) {
+      #modHomeDepatri > .depatri-home-shell,
+      .depatri-home-shell { width: min(900px, calc(100% - 24px)); }
+      .depatri-home-layout { grid-template-columns: 1fr; }
+      .depatri-user-panel { position: static; width: 100%; }
+      .depatri-home-indicators { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .depatri-hero { min-height: 390px; aspect-ratio: auto; }
+      .depatri-hero-brasao-3d { height: 140px; }
+    }
+
+    @media (max-width: 991px) {
+      .depatri-topbar .container-fluid { min-height: 74px; }
+      .depatri-topbar-crest { width: 48px; height: 54px; flex-basis: 48px; }
+      .depatri-topbar .navbar-collapse { padding: 12px 0 16px; }
+      .depatri-topbar-actions { width: 100%; justify-content: flex-end; }
+    }
+
+    @media (max-width: 760px) {
+      .depatri-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .depatri-section-title { align-items: stretch; flex-direction: column; }
+      .depatri-module-search { width: 100%; }
+      .depatri-module-card { min-height: 142px; padding: 16px 10px; }
+    }
+
+    @media (max-width: 700px) {
+      .depatri-home-indicators { grid-template-columns: 1fr; }
+      .depatri-user-panel { padding: 14px; }
+      .depatri-home-layout { gap: 18px; }
+    }
+
+    @media (max-width: 560px) {
+      .depatri-topbar { min-height: 70px; }
+      .depatri-topbar-brand-copy strong { font-size: 1rem; letter-spacing: .22em; }
+      .depatri-topbar-brand-copy small { font-size: .64rem; }
+      .depatri-topbar-user-button { max-width: 100%; }
+      .depatri-topbar-action { width: 40px; }
+      .depatri-hero { min-height: 410px; padding: 18px 12px; background-position: center center; }
+      .depatri-hero-brasao-3d { height: 125px; max-width: 210px; }
+      .depatri-hero-title { font-size: clamp(42px, 13vw, 58px); letter-spacing: .07em; text-indent: .07em; }
+      .depatri-hero-subtitle { font-size: .68rem; letter-spacing: .07em; }
+      .depatri-hero-caption { max-width: 96%; padding: 7px 10px; font-size: .68rem; }
+    }
+
+    @media (max-width: 520px) {
+      .depatri-grid { grid-template-columns: 1fr; }
+    }
+
+
+/* ========================================================================
+   HOME DEPATRI — AMPLIAÇÃO EXCLUSIVA DA ÁREA PRINCIPAL
+   Cole este bloco no FINAL do <style> do Index.html.
+   ======================================================================== */
+
+/* Em telas grandes, usa toda a largura já disponibilizada pelo container-fluid.
+   O padding px-4 do elemento pai mantém aproximadamente 24px em cada lateral. */
+@media (min-width: 981px) {
+  #modHomeDepatri > .depatri-home-shell,
+  .depatri-home-shell {
+    width: 100%;
+    max-width: none;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  /* Mantém o painel lateral exatamente com os 310px atuais. */
+  .depatri-home-layout {
+    grid-template-columns: 310px minmax(0, 1fr);
+  }
+
+  .depatri-user-panel {
+    width: 310px;
+    min-width: 310px;
+    max-width: 310px;
+  }
+
+  /* Somente a coluna principal absorve o espaço adicional. */
+  .depatri-home-main {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+/* Brasão central aproximadamente 25% maior, mantendo proporção e centralização. */
+.depatri-hero-brasao-3d {
+  width: auto;
+  height: clamp(181px, 12.5vw, 225px);
+  max-width: min(325px, 37.5vw);
+  max-height: 225px;
+  object-fit: contain;
+  object-position: center;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+/* Mantém o crescimento proporcional também nos pontos responsivos existentes. */
+@media (max-width: 980px) {
+  .depatri-hero-brasao-3d {
+    height: 175px;
+    max-height: 175px;
+  }
+}
+
+@media (max-width: 560px) {
+  .depatri-hero-brasao-3d {
+    height: 156px;
+    max-width: 263px;
+    max-height: 156px;
+  }
+}
+
+
+
+  </style>
+</head>
+<body>
+
+<div id="telaLogin" class="container mt-5 tela-sistema tela-ativa">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card card-depatri mt-5">
+        <div class="card-body text-center p-5">
+          <h2 style="color: var(--gold-primary);">PORTAL DEPATRI</h2>
+          <p class="text-muted">Polícia Civil do Estado do Ceará</p>
+          <hr style="border-color: var(--gold-primary);">
+
+          <div class="mb-3 mt-4 text-start">
+            <label class="form-label">Usuário de Acesso</label>
+            <input type="text" id="loginUsuario" class="form-control" placeholder="Ex: joliveira">
+          </div>
+
+          <div class="mb-3 text-start">
+            <label class="form-label">Senha</label>
+            <input type="password" id="senhaUsuario" class="form-control" placeholder="Sua senha">
+          </div>
+
+          <button class="btn btn-gold w-100 mt-3 fw-bold" onclick="fazerLogin()">
+            <i class="fas fa-sign-in-alt"></i> Entrar no Sistema
+          </button>
+
+          <div id="msgLogin" class="mt-3 text-danger fw-bold"></div>
+
+          <div class="mt-4 d-flex flex-column gap-2">
+            <a href="javascript:void(0)" class="text-warning text-decoration-none" onclick="mostrarCadastro()">
+              <i class="fas fa-user-plus"></i> Primeiro acesso? Solicitar cadastro
+            </a>
+
+            <a href="javascript:void(0)" class="text-light text-decoration-none" onclick="mostrarRecuperacaoSenha()">
+              <i class="fas fa-key"></i> Esqueci minha senha
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div id="telaCadastro" class="container mt-5 tela-sistema">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card card-depatri mt-3">
+          <div class="card-body p-4">
+            <h4 style="color: var(--gold-primary);" class="mb-3"><i class="fas fa-id-badge"></i> Solicitar Acesso</h4>
+            <p class="text-muted small border-bottom border-secondary pb-2">Seu login será gerado automaticamente após o cadastro.</p>
+            
+            <div class="row g-3 text-start">
+              <div class="col-md-12">
+                <label class="form-label">Nome Completo</label>
+                <input type="text" id="cadNome" class="form-control" placeholder="Ex: Antonio José Silva">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">E-mail Institucional</label>
+                <input type="email" id="cadEmail" class="form-control" placeholder="@pc.ce.gov.br">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Matrícula</label>
+                <input type="text" id="cadMatricula" class="form-control" placeholder="Ex: 123456-1-X">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">Lotação / Delegacia</label>
+                <select id="cadDelegacia" class="form-select" onchange="onChangeLotacaoCadastroPortal()">
+                  <option value="">Carregando...</option>
+                </select>
+              </div>
+              <div class="col-md-12" id="cadEquipeWrap" style="display:none;">
+                <label class="form-label">Equipe</label>
+                <select id="cadEquipe" class="form-select">
+                  <option value="">Selecione a equipe</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn btn-gold w-100 mt-4 fw-bold" onclick="enviarCadastro()" id="btnCadastrar">
+              Enviar Solicitação
+            </button>
+            <button class="btn btn-outline-secondary w-100 mt-2" onclick="voltarLogin()">
+              Voltar
+            </button>
+            <div id="msgCadastro" class="mt-3 text-center fw-bold"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="telaRecuperarSenha" class="container mt-5 tela-sistema">
+    <div class="row justify-content-center">
+      <div class="col-md-5">
+        <div class="card card-depatri mt-5">
+          <div class="card-body text-center p-5">
+            <h4 style="color: var(--gold-primary);"><i class="fas fa-key"></i> Recuperação de senha</h4>
+            <p class="text-muted">Informe seu e-mail institucional para receber uma senha temporária.</p>
+            <hr style="border-color: var(--gold-primary);">
+            <div class="mb-3 text-start">
+              <label class="form-label">E-mail institucional</label>
+              <input type="email" id="recEmail" class="form-control" placeholder="nome@pc.ce.gov.br">
+            </div>
+            <button class="btn btn-gold w-100 mt-3 fw-bold" onclick="enviarRecuperacaoSenha()" id="btnRecuperarSenha">
+              <i class="fas fa-paper-plane"></i> Enviar senha temporária
+            </button>
+            <button class="btn btn-outline-secondary w-100 mt-2" onclick="voltarLoginRecuperacao()">
+              Voltar
+            </button>
+            <div id="msgRecuperacaoSenha" class="mt-3 text-center fw-bold"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="telaTrocaSenha" class="container mt-5 tela-sistema">
+    <div class="row justify-content-center">
+      <div class="col-md-5">
+        <div class="card card-depatri mt-5 border-warning">
+          <div class="card-body text-center p-5">
+            <h4 style="color: var(--gold-primary);"><i class="fas fa-shield-alt"></i> Segurança DEPATRI</h4>
+            <p class="text-muted">Este é seu primeiro acesso. Para sua segurança, crie uma senha pessoal e intransferível.</p>
+            <hr style="border-color: var(--gold-primary);">
+            
+            <div class="mb-3 text-start">
+              <label class="form-label">Nova Senha</label>
+              <input type="password" id="novaSenha1" class="form-control" placeholder="Mínimo de 6 caracteres">
+            </div>
+            <div class="mb-3 text-start">
+              <label class="form-label">Confirme a Nova Senha</label>
+              <input type="password" id="novaSenha2" class="form-control" placeholder="Repita a senha">
+            </div>
+            
+            <button class="btn btn-warning w-100 mt-3 fw-bold" onclick="salvarNovaSenha()">
+              <i class="fas fa-lock"></i> Atualizar Senha e Entrar
+            </button>
+            <div id="msgTrocaSenha" class="mt-3 text-danger fw-bold"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="telaPrincipal" class="tela-sistema">
+    
+    <nav class="navbar navbar-expand-lg navbar-dark depatri-topbar">
+      <div class="container-fluid">
+        <a class="navbar-brand depatri-topbar-brand" href="javascript:void(0)" onclick="navegar('modHomeDepatri')" aria-label="Ir para a Home do Portal DEPATRI">
+          <img id="depatriTopbarBrasao" class="depatri-topbar-crest" alt="Brasão da Polícia Civil do Estado do Ceará" loading="eager" decoding="async" fetchpriority="high">
+          <span class="depatri-topbar-brand-copy"><small>Portal</small><strong>DEPATRI</strong></span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item nav-home-depatri"><a class="nav-link active" href="javascript:void(0)" onclick="navegar('modHomeDepatri')"><i class="fas fa-house"></i> Início</a></li>
+            <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="navegar('mod-demandas')">Demandas Ativas</a></li>
+<li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="navegar('modDemandasGerais')">Demandas Gerais</a></li>
+            <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="navegar('telaProdutividade')">Produtividade</a></li>
+            <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="navegar('modAdministrativo')">Administrativo</a></li>
+            <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="navegar('mod3')">Gerador de Ofícios</a></li>
+            <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="navegar('mod4')">Desenvolvimento de Demandas Ativas</a></li>
+            <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="navegar('mod5')">Casos Prioritários</a></li>
+            <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="navegar('mod6')">Relatório de Serviço Extraordinário</a></li>
+            <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="navegar('modDashboardDemandas')">Dashboard Demandas</a></li>
+            <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="navegar('modDashboard')">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="navegar('modRelatorioGerencial')">Relatório Gerencial</a></li>
+<li class="nav-item"><a class="nav-link" href="javascript:void(0)" onclick="navegar('modSirp')">Análise de Rotas e Cobertura de Câmeras</a></li>
+<li class="nav-item" id="navNumeradorIntel" style="display:none;"><a class="nav-link" href="javascript:void(0)" onclick="navegar('mod7')">Numerador</a></li>
+            <li class="nav-item" id="navUsuariosPortal" style="display:none;"><a class="nav-link" href="javascript:void(0)" onclick="navegar('modUsuarios')">Usuários</a></li>
+          </ul>
+          <div class="depatri-topbar-actions" aria-label="Ações da Home">
+            <button class="depatri-topbar-action" type="button" title="Notificações" aria-label="Exibir notificações" onclick="exibirAvisoPortal('Não há notificações novas.')">
+              <i class="fas fa-bell" aria-hidden="true"></i>
+            </button>
+            <button class="depatri-topbar-action" type="button" title="Atualizar Home" aria-label="Atualizar Home" onclick="navegar('modHomeDepatri')">
+              <i class="fas fa-rotate" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="dropdown">
+  <button
+    class="btn btn-sm d-flex align-items-center gap-2 depatri-topbar-user-button"
+    type="button"
+    data-bs-toggle="dropdown"
+    aria-expanded="false"
+  >
+    <span class="depatri-topbar-user-avatar"><i class="fas fa-user" aria-hidden="true"></i></span>
+    <span id="userInfo"></span>
+    <i class="fas fa-chevron-down" style="font-size:0.75em; opacity:0.8;" aria-hidden="true"></i>
+  </button>
+
+  <ul
+    class="dropdown-menu dropdown-menu-end shadow"
+    style="background:#1e1e1e; border:1px solid #333; min-width:230px; border-radius:12px;"
+  >
+    <li>
+      <button
+        class="dropdown-item text-light py-2"
+        type="button"
+        onclick="abrirModalAlterarSenha()"
+        style="background:transparent;"
+      >
+        <i class="fas fa-key me-2 text-warning"></i>Mudar senha
+      </button>
+    </li>
+    <li><hr class="dropdown-divider" style="border-color:#333;"></li>
+    <li>
+      <button
+        class="dropdown-item text-danger py-2"
+        type="button"
+        onclick="sair()"
+        style="background:transparent;"
+      >
+        <i class="fas fa-sign-out-alt me-2"></i>Sair
+      </button>
+    </li>
+  </ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+      
+
+      <div id="modHomeDepatri" class="tela-sistema mt-2" style="display: none;"></div>
+
+      <div id="mod-demandas" class="tela-sistema mt-4" style="display: none;">
+        <div class="card card-depatri">
+          <div class="card-header card-header-gold">
+            <h4 class="mb-0"><i class="fas fa-file-alt"></i> Registro de Demandas</h4>
+          </div>
+          <div class="card-body">
+            <div class="card card-depatri mb-4">
+  <div class="card-header card-header-gold">
+    <h5 class="mb-0"><i class="fas fa-magnifying-glass"></i> Buscar Ocorrência</h5>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+  <div class="col-lg-2 col-md-4">
+    <label class="form-label">Equipe</label>
+    <select class="form-select" id="dem_busca_equipe">
+      <option value="">Todas</option>
+    </select>
+  </div>
+
+  <div class="col-lg-2 col-md-4">
+    <label class="form-label">Status</label>
+    <select class="form-select" id="dem_busca_status">
+      <option value="">Todos</option>
+    </select>
+  </div>
+
+  <div class="col-lg-2 col-md-4">
+    <label class="form-label">Data</label>
+    <input type="date" class="form-control" id="dem_busca_data">
+  </div>
+
+  <div class="col-lg-2 col-md-4">
+    <label class="form-label">Nº do Procedimento</label>
+    <input type="text" class="form-control" id="dem_busca_numero" placeholder="Ex: 12345/2026">
+  </div>
+
+  <div class="col-lg-2 col-md-4">
+    <label class="form-label">Tipo de crime</label>
+    <select class="form-select" id="dem_busca_nome_caso">
+      <option value="">Todos</option>
+    </select>
+  </div>
+
+  <div class="col-lg-2 col-md-4">
+    <label class="form-label">Fenômeno criminal</label>
+    <select class="form-select" id="dem_busca_caso_especifico">
+      <option value="">Todos</option>
+    </select>
+  </div>
+
+  <div class="col-lg-4 col-md-8">
+    <label class="form-label">Pesquisa Geral</label>
+    <input type="text" class="form-control" id="dem_busca_texto" placeholder="Vítima, bairro, endereço, caso...">
+  </div>
+</div>
+
+    <div class="mt-3 d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-outline-warning" onclick="buscarDemandasAtivasFrontend()">
+        <i class="fas fa-search"></i> Buscar
+      </button>
+      <button type="button" class="btn btn-outline-secondary" onclick="limparBuscaDemandasAtivasFrontend()">
+        <i class="fas fa-eraser"></i> Limpar Busca
+      </button>
+    </div>
+
+  </div>
+</div>
+            <form id="formDemandas">
+              <input type="hidden" id="dem_row_index" value="">
+              <div class="row mb-3">
+                <div class="col-md-3">
+                  <label class="form-label">Data da Ocorrência</label>
+                  <input type="date" class="form-control" id="dem_data">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Status</label>
+                  <select class="form-select" id="dem_status">
+                    <option value="">Carregando...</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Unidade Responsável</label>
+                  <select class="form-select" id="dem_unidade" onchange="verificarUnidade()">
+                    <option value="">Carregando...</option>
+                  </select>
+                </div>
+                <div class="col-md-3" id="div_equipe" style="display:none;">
+                  <label class="form-label">Equipe</label>
+                  <select class="form-select" id="dem_equipe">
+                    <option value="">Carregando...</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label class="form-label">Tipo de Ocorrência</label>
+                  <select class="form-select" id="dem_tipo_oco">
+                    <option value="">Carregando...</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Nº da Ocorrência</label>
+                  <input type="text" class="form-control" id="dem_num_oco" placeholder="Ex: 12345/2026">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Nome da Vítima</label>
+                  <input type="text" class="form-control" id="dem_vitima">
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label class="form-label">Endereço da Ocorrência</label>
+                  <input type="text" class="form-control" id="dem_endereco">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Bairro</label>
+                  <input type="text" class="form-control" id="dem_bairro">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Fenômeno Criminal</label>
+                  <select class="form-select" id="dem_caso">
+                    <option value="">Carregando...</option>
+                  </select>
+                </div>
+              </div>
+                
+              <div class="row mb-4 g-3 align-items-end">
+                <div class="col-lg-4 col-md-12">
+                  <label class="form-label">Crime - Tipo</label>
+                  <select class="form-select" id="dem_crime">
+                    <option value="">Carregando...</option>
+                  </select>
+                </div>
+                <div class="col-lg-5 col-md-8">
+                  <label class="form-label">Procedimento Instaurado <span class="text-muted fw-normal">(opcional)</span></label>
+                  <input type="text" class="form-control" id="dem_proc_instaurado" placeholder="Ex.: IP 321-13-2026">
+                </div>
+                <div class="col-lg-3 col-md-4">
+                  <div class="d-grid gap-2">
+                    <div class="form-check border border-danger rounded px-3 py-2 bg-dark">
+                      <input class="form-check-input nc-switch ms-0 me-2" type="checkbox" id="dem_proc_nao_instaurado" onchange="alternarProcedimentoNaoInstauradoFrontend()">
+                      <label class="form-check-label" for="dem_proc_nao_instaurado">Procedimento não instaurado pela delegacia</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card card-depatri p-3 mb-4 border border-warning">
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label class="form-label text-warning">Demanda evoluída por razões diversas <span class="text-muted fw-normal">(opcional)</span></label>
+                    <select class="form-select" id="dem_motivo_evolucao_diversa" onchange="atualizarCamposDenunciacaoFalsaDemandasFrontend_()">
+                      <option value="">Nenhuma razão diversa</option>
+                      <option value="INCONSISTÊNCIA INVOLUNTÁRIA NAS INFORMAÇÕES INICIAIS DA VÍTIMA">Inconsistência involuntária nas informações iniciais da vítima</option>
+                      <option value="VÍTIMA NÃO COLABORATIVA">Vítima não colaborativa</option>
+                      <option value="DENUNCIAÇÃO FALSA DE CRIME">Denunciação falsa de crime</option>
+                    </select>
+                    <div class="form-text text-muted">Qualquer uma das opções acima classifica a ocorrência como DEMANDA EVOLUÍDA.</div>
+                  </div>
+                  <div class="col-12" id="dem_denunciacao_falsa_wrap" style="display:none;">
+                    <div class="row g-3 border-top border-secondary pt-3 mt-1">
+                      <div class="col-md-4"><label class="form-label">Nome do infrator da denunciação falsa <span class="text-muted fw-normal">(opcional)</span></label><input type="text" class="form-control" id="dem_denunciacao_falsa_infrator" placeholder="Nome do infrator"></div>
+                      <div class="col-md-4"><label class="form-label">Tipo de Procedimento <span class="text-muted fw-normal">(opcional)</span></label><select class="form-select" id="dem_denunciacao_falsa_tipo_procedimento"><option value="">Selecione...</option><option value="B.O">B.O</option><option value="T.C.O">T.C.O</option><option value="INQUERITO POLICIAL">INQUERITO POLICIAL</option><option value="PROCESSO JUDICIAL">PROCESSO JUDICIAL</option><option value="TDN">TDN</option><option value="ATO INFRACIONAL">ATO INFRACIONAL</option><option value="OCORRENCIA CIOPS">OCORRENCIA CIOPS</option><option value="OUTRO">OUTRO</option></select></div>
+                      <div class="col-md-4"><label class="form-label">Nº do Procedimento <span class="text-muted fw-normal">(opcional)</span></label><input type="text" class="form-control" id="dem_denunciacao_falsa_numero_procedimento" placeholder="Aceita números, letras e caracteres especiais"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <hr style="border-color: var(--gold-primary);">
+              <h5 class="text-light mb-3">Contadores</h5>
+
+              <div class="row" id="containerContadoresDemandas"></div>
+              <div class="row" id="containerDetalhesDemandas"></div>
+              <div class="mt-4">
+                <label class="form-label">Observações</label>
+                <textarea class="form-control" id="dem_observacoes" rows="3"></textarea>
+              </div>
+
+              <div class="mt-4 d-flex flex-wrap justify-content-end gap-2">
+  <button type="button" class="btn btn-outline-secondary px-4 py-2" onclick="cancelarEdicaoDemandaFrontend()" id="btnCancelarEdicaoDemanda" style="display:none;">
+    <i class="fas fa-xmark"></i> Cancelar Edição
+  </button>
+
+  <button type="button" class="btn btn-gold px-4 py-2" onclick="enviarDemanda()" id="btnSalvarDemanda">
+    <i class="fas fa-save"></i> Salvar Demanda
+  </button>
+</div>
+            </form>
+            <div id="dem_busca_resultados" class="mt-4"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="telaProdutividade" class="tela-sistema mt-4" style="display: none;">
+
+        <div class="card-depatri p-4 mb-4">
+          <h4 class="card-header-gold mb-4">REGISTRO DE PRODUTIVIDADE</h4>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <label class="form-label">DELEGACIA</label>
+              <select id="prodDelegacia" class="form-select" disabled>
+                <option value="">Carregando...</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">ANO / REFERÊNCIA</label>
+              <input type="number" id="prodAno" class="form-control" onchange="validarAnoProdutividade(this)" placeholder="Ex: 2024">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">MÊS</label>
+              <select id="prodMes" class="form-select">
+                <option value="">Carregando...</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="alert alert-warning text-dark" role="alert">
+            <strong>Instrução:</strong> Preencha as quantidades ou marque <b>"Não Contabilizado" (NC)</b> para desativar o campo.
+          </div>
+
+          <div id="containerContadores"></div>
+          <div id="containerInqueritosInstaurados"></div>
+          <div id="containerInqueritosConcluidos"></div>
+          <div id="containerRepresentacao"></div>
+          <div id="containerApreensao"></div>
+          <div id="containerIndiciamento"></div>
+          <div id="containerRelatorio"></div>
+          <div id="containerValores"></div>
+
+          <hr class="border-secondary mt-4 mb-4">
+          <button class="btn btn-gold w-100 py-2 fs-5" onclick="salvarLoteProdutividade()" id="btnSalvarProd">
+            SALVAR REGISTRO
+          </button>
+        </div>
+      </div>
+
+      <div id="modDashboard" class="tela-sistema mt-4" style="display: none;">
+        <div class="card card-depatri p-4 text-center text-muted">Carregando dashboard.</div>
+      </div>
+
+      <div id="modAdministrativo" class="tela-sistema mt-4" style="display: none;">
+  <div class="card card-depatri p-4 text-center text-muted">Carregando módulo Administrativo...</div>
+</div>
+
+      <div id="modDashboardDemandas" class="tela-sistema mt-4" style="display: none;">
+  <div class="card card-depatri p-4 text-center text-muted">Carregando Dashboard Demandas.</div>
+</div>
+
+      <div id="modRelatorioGerencial" class="tela-sistema mt-4" style="display: none;">
+  <div class="card card-depatri p-4 text-center text-muted">Carregando Relatório Gerencial.</div>
+</div>
+
+      <div id="mod3" class="tela-sistema mt-4" style="display: none;">
+        <h3 class="card-header-gold pb-2 mb-4">Ofícios e Mandados</h3>
+      </div>
+
+      <div id="mod7" class="tela-sistema mt-4" style="display: none;">
+        <h3 class="card-header-gold pb-2 mb-4">Numerador</h3>
+      </div>
+
+      <div id="mod4" class="tela-sistema mt-4" style="display: none;">
+        <h3 class="card-header-gold pb-2 mb-4">Evoluções de demandas</h3>
+      </div>
+
+      <div id="mod5" class="tela-sistema mt-4" style="display: none;">
+        <div class="card card-depatri p-4 text-center text-muted">Carregando módulo Casos prioritários...</div>
+      </div>
+
+      <div id="mod6" class="tela-sistema mt-4" style="display: none;">
+  <h3 class="card-header-gold pb-2 mb-4">Serviço Extraordinário</h3>
+</div>
+
+<div id="modSirp" class="tela-sistema mt-4" style="display: none;">
+  <div class="card card-depatri p-4 text-center text-muted">Carregando módulo Análise de Rotas e Cobertura de Câmeras...</div>
+</div>
+
+<div id="modDemandasGerais" class="tela-sistema mt-4" style="display: none;">
+  <div class="card card-depatri p-4 text-center text-muted">Carregando módulo Demandas Gerais...</div>
+</div>
+
+<div id="modUsuarios" class="tela-sistema mt-4" style="display: none;">
+  <h3 class="card-header-gold pb-2 mb-4">Usuários</h3>
+</div>
+
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalAlterarSenha" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background:#1e1e1e; color:#f8f9fa; border:1px solid #333; border-radius:14px;">
+      <div class="modal-header" style="border-bottom:1px solid #333;">
+        <h5 class="modal-title" style="color:#d4af37;">
+          <i class="fas fa-key me-2"></i>Alterar senha
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Senha atual</label>
+          <input type="password" id="altSenhaAtual" class="form-control" placeholder="Digite sua senha atual">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Nova senha</label>
+          <input type="password" id="altNovaSenha1" class="form-control" placeholder="Mínimo de 6 caracteres">
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label">Confirmar nova senha</label>
+          <input type="password" id="altNovaSenha2" class="form-control" placeholder="Repita a nova senha">
+        </div>
+
+        <div id="msgAlterarSenha" class="small fw-bold mt-3"></div>
+      </div>
+
+      <div class="modal-footer" style="border-top:1px solid #333;">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-gold" id="btnSalvarAlterarSenha" onclick="salvarAlteracaoSenhaLogado()">
+          <i class="fas fa-save me-1"></i>Salvar nova senha
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+<?!= include('JAVASCRIPT'); ?>
+<?!= include('DASHBOARD_JS'); ?>
+
+
+
+
+</body>
+
+
+</html>

@@ -1,0 +1,11 @@
+{
+  "indexes": [
+    {"collectionGroup": "casos", "queryScope": "COLLECTION", "fields": [
+      {"fieldPath": "ativo", "order": "ASCENDING"}, {"fieldPath": "nomeChave", "order": "ASCENDING"}
+    ]},
+    {"collectionGroup": "demandas", "queryScope": "COLLECTION", "fields": [
+      {"fieldPath": "casoId", "order": "ASCENDING"}, {"fieldPath": "unidadeChave", "order": "ASCENDING"}
+    ]}
+  ],
+  "fieldOverrides": []
+}
