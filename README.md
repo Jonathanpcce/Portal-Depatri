@@ -1,6 +1,6 @@
 # Portal DEPATRI — arquivos completos corrigidos
 
-Atualização dos módulos aplicada aos cinco arquivos originais em 15/09/2026. Versão para o repositório `Jonathanpcce/Portal-Depatri`, configurada em 16/09/2026 para o projeto Firebase `portal-depatri-6da3c`.
+Atualização dos módulos aplicada aos cinco arquivos originais em 15/09/2026. Versão para o repositório `Jonathanpcce/Portal-Depatri`. Configuração Web completa do projeto `portal-depatri-6da3c` aplicada em 17/09/2026, com avanço da migração de Demandas Ativas.
 
 O cadastro de Casos Prioritários agora solicita somente **nome do caso, tipo de crime e subtipo de crime**. Ao confirmar o cadastro, o mesmo caso passa a aparecer em **Selecione um caso** e em **Fenômeno Criminal**, tanto no formulário quanto na busca de Demandas Ativas.
 
@@ -32,13 +32,15 @@ O cadastro de casos segue os perfis de edição do sistema original: ADMIN e NUI
 
 **A correção dos cinco originais ainda utiliza Google Apps Script e Google Sheets. A migração completa para Firebase e a publicação em portaldepatri.com.br não foram concluídas.**
 
-A pasta `firebase` inclui o módulo Firebase preparado anteriormente, seus testes e o planejador de migração. Esse módulo já possui cadastro, catálogo compartilhado, autenticação Firebase e serviço de vínculo para demandas existentes. Ele ainda não substitui o cadastro completo de demandas nem os demais módulos do Portal. Os dois conjuntos são etapas separadas e não devem ser publicados como se já estivessem integrados.
+A pasta `firebase` agora reúne Casos Prioritários e o formulário de Demandas Ativas na mesma aplicação, com login Firebase, catálogo compartilhado, cadastro/edição de demandas, pesquisa, contadores e PDFs privados. O salvamento usa Firestore, confirma o caso no servidor e protege contra procedimento duplicado e edição concorrente. Os testes executam esses fluxos com banco e armazenamento simulados. A nova aplicação ainda não contém os demais módulos do Portal; a versão completa em Apps Script permanece em `apps-script`.
 
-O repositório de destino é `Jonathanpcce/Portal-Depatri` e o projeto Firebase é `portal-depatri-6da3c`. O arquivo `firebase/.firebaserc` já aponta para esse projeto. Ainda faltam a autenticação do operador no Firebase, a configuração pública do aplicativo Web, a conversão dos demais serviços e a conferência/importação dos dados históricos. A configuração e validação do Firebase antecedem a associação do domínio e seus registros DNS. O envio deste código ao GitHub não publica o Portal no domínio; não houve deploy, importação de dados nem alteração de DNS.
+O repositório de destino é `Jonathanpcce/Portal-Depatri` e o projeto Firebase é `portal-depatri-6da3c`. O aplicativo Web e o destino de publicação estão alinhados. Ainda faltam acesso autenticado de administração, configuração/validação dos serviços Firebase, importação dos menus de `DB_CONFIG`, conferência/importação dos dados históricos e migração dos demais módulos e integrações. A configuração Web fornecida não concede acesso administrativo ao projeto. O envio ao GitHub não publica o Portal no domínio; não houve deploy, importação de dados nem alteração de DNS.
+
+O formulário Firebase mantém os dados de veículos recuperados, com preenchimento manual. A consulta automática externa de valores/modelos de veículos ainda precisa ser convertida. As regras e a compatibilidade dos dados reais devem ser verificadas antes de substituir o sistema em uso.
 
 ## Validação e desenvolvimento
 
-Foram aprovados **15 testes automatizados dos arquivos originais corrigidos**, incluindo cadastro pelo formulário, presença nos três seletores, gravação e pesquisa de demandas, permissões de edição, vínculos antigos e respostas assíncronas. Os testes usam DOM e serviços Apps Script simulados. Não equivalem a uma implantação validada no Google Apps Script ou no Firebase. Detalhes em `docs/VALIDACAO.md`.
+Foram aprovados **15 testes dos arquivos originais corrigidos e 47 testes do módulo Firebase**, incluindo cadastro pelo formulário, presença nos três seletores, gravação e pesquisa de demandas, permissões de edição, vínculos antigos, concorrência e PDFs. Os testes usam DOM, banco e serviços simulados. Não equivalem a uma implantação validada no Google Apps Script ou no Firebase. Detalhes em `docs/VALIDACAO.md` e `firebase/docs/VALIDACAO.md`.
 
 Para executar os testes, use Node.js 22 ou superior:
 
@@ -47,7 +49,7 @@ npm ci
 npm test
 ```
 
-Com Firebase CLI instalada e autenticada no projeto, obtenha automaticamente a configuração pública do aplicativo Web:
+A configuração pública do aplicativo Web já está aplicada. Para atualizá-la futuramente, com Firebase CLI instalada e autenticada no mesmo projeto:
 
 ```bash
 npm run firebase:configure

@@ -8,13 +8,14 @@ export function bindCaseSelector(store, select, {placeholder = 'Selecione um cas
   const syncId = () => { select.dataset.casoId = select.selectedOptions[0]?.dataset.casoId || ''; };
   const unsubscribe = store.subscribe(({casos, sessionCleared}) => {
     const previous = sessionCleared ? '' : select.value, previousId = sessionCleared ? '' : select.dataset.casoId || '';
+    const previousLabel = select.selectedOptions[0]?.textContent;
     select.replaceChildren(); option(select, '', placeholder);
     for (const c of casos) option(select, valueMode === 'id' ? c.id : c.nomeCaso, c.nomeCaso, c.id);
     const match = [...select.options].find(o => previousId ? o.dataset.casoId === previousId : o.value === previous);
     if (match) select.value = match.value;
     else if (previous) {
       // Preserva a referência histórica para revisão, sem convertê-la em um caso arbitrário.
-      const old = option(select, previous, `${previous} (registro anterior)`);
+      const old = option(select, previous, previousLabel || `${previous} (registro anterior)`);
       old.dataset.unmapped = 'true'; select.value = previous;
     }
     syncId();

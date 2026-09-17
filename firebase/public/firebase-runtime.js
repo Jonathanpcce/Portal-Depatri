@@ -4,6 +4,8 @@ import {getAuth, setPersistence, browserSessionPersistence, signInWithEmailAndPa
 import {getFunctions, httpsCallable, connectFunctionsEmulator} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js';
 import {CasesStore} from './cases-store.js';
 import {mountCases} from './cases-ui.js';
+import {DemandsStore} from './demands-store.js';
+import {mountDemands} from './demands-ui.js';
 
 export async function start(config) {
   const app = initializeApp(config), auth = getAuth(app), functions = getFunctions(app, 'southamerica-east1');
@@ -14,25 +16,42 @@ export async function start(config) {
   await setPersistence(auth, browserSessionPersistence);
   const status = document.querySelector('#status'), login = document.querySelector('#login');
   const root = document.querySelector('#cases'), logout = document.querySelector('#signout');
+  const portal = document.querySelector('#portal'), demandsRoot = document.querySelector('#demands');
   const loginForm = document.querySelector('#login-form'), message = document.querySelector('#login-message');
-  const store = new CasesStore(async (name, payload) => {
+  const call = async (name, payload) => {
     if (!auth.currentUser) throw new Error('Entre no portal para continuar.');
     try { return (await httpsCallable(functions, name)(payload)).data; }
     catch (error) {
-      const known = ['already-exists', 'invalid-argument', 'permission-denied', 'unauthenticated', 'not-found', 'failed-precondition'];
+      const known = ['already-exists', 'invalid-argument', 'permission-denied', 'unauthenticated', 'not-found', 'failed-precondition', 'aborted'];
       if (known.some(code => error.code === `functions/${code}`)) throw error;
       throw new Error('Não foi possível concluir. Confira a conexão e tente novamente.');
     }
+  };
+  const store = new CasesStore(call), demandsStore = new DemandsStore(call);
+  let view, demandView, pendingDestroy, generation = 0;
+  document.querySelectorAll('[data-module]').forEach(button => {
+    button.onclick = () => {
+      root.hidden = button.dataset.module !== 'cases'; demandsRoot.hidden = button.dataset.module !== 'demands';
+      document.querySelectorAll('[data-module]').forEach(b => {
+        const selected = b === button; b.setAttribute('aria-pressed', String(selected)); b.classList.toggle('secondary', !selected);
+      });
+    };
   });
-  let view, generation = 0;
   onAuthStateChanged(auth, async user => {
     const current = ++generation;
-    view?.destroy(); view = null; store.reset(); root.hidden = true;
-    login.hidden = !!user; logout.hidden = !user; status.textContent = user ? 'Carregando casos…' : '';
+    view?.destroy(); demandView?.destroy(); pendingDestroy?.(); view = null; demandView = null; pendingDestroy = null;
+    store.reset(); demandsStore.reset(); portal.hidden = true;
+    login.hidden = !!user; logout.hidden = !user; status.textContent = user ? 'Carregando portal…' : '';
     if (!user) return;
     try {
       await store.refresh(); if (current !== generation) return;
-      view = mountCases(root, store); root.hidden = false; status.textContent = '';
+      view = mountCases(root, store); portal.hidden = false; status.textContent = '';
+      document.querySelector('[data-module="cases"]').click();
+      const pending = mountDemands(demandsRoot, demandsStore, store, {onSaved: async () => { if (current === generation) await view?.refresh(); }});
+      pendingDestroy = demandsRoot._destroyDemands;
+      const mounted = await pending;
+      if (current !== generation) { mounted.destroy(); return; }
+      demandView = mounted; pendingDestroy = null;
     } catch (error) { if (current === generation) status.textContent = error.message; }
   });
   loginForm.onsubmit = async event => {
@@ -45,5 +64,5 @@ export async function start(config) {
     finally { submit.disabled = false; }
   };
   logout.onclick = async () => { try { await signOut(auth); } catch { status.textContent = 'Não foi possível sair. Tente novamente.'; } };
-  return {store, auth};
+  return {store, demandsStore, auth};
 }

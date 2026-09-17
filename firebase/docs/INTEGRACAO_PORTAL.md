@@ -1,6 +1,23 @@
 # Integração com os arquivos originais
 
-Os cinco arquivos originais já foram recuperados e corrigidos em `../../apps-script`. A nova interface, os filtros e o vínculo por ID funcionam na base Apps Script testada. A conexão dessa base completa aos serviços Firebase desta pasta continua pendente; nenhuma versão foi publicada no domínio.
+Os cinco arquivos originais já foram recuperados e corrigidos em `../../apps-script`. A nova interface, os filtros e o vínculo por ID funcionam na base Apps Script testada. A aplicação em `public` agora reúne Casos Prioritários e Demandas Ativas sobre Firebase. A conversão da base completa e suas demais integrações continua pendente; nenhuma versão foi publicada no domínio.
+
+## Aplicação Firebase desta etapa
+
+`public/firebase-runtime.js` cria uma sessão Firebase, um `CasesStore` compartilhado e um `DemandsStore`. `mountCases` e `mountDemands` são montados no mesmo portal. O formulário de demandas e a busca usam IDs nos valores dos seletores, com `bindCaseSelector`; a fonte da lista é o mesmo catálogo que recebe os novos casos.
+
+O formulário usa os campos e contadores definidos no servidor em `demands-core.cjs`. A gravação chama `salvarDemandaAtiva`, que valida os campos, confirma o caso e grava a demanda/índices/auditoria na mesma transação. Os serviços novos são:
+
+| Função callable | Operação |
+|---|---|
+| `obterBootstrapDemandasAtivas` | Perfil de edição, campos, contadores e menus de DB_CONFIG |
+| `obterDemandaAtiva` | Registro completo após verificar a unidade |
+| `salvarDemandaAtiva` | Cadastro/edição, repetição sem duplicar e controle de versão |
+| `pesquisarDemandasAtivas` | Filtros combinados e paginação |
+| `enviarPdfDemanda` | Upload autorizado de PDF privado |
+| `baixarPdfDemanda` | Download após conferir o vínculo e a unidade |
+
+As quatro funções anteriores de casos permanecem. Ao confirmar uma demanda, a consulta do caso selecionado é atualizada. Ao encerrar a sessão, os módulos são desmontados e as respostas antigas são descartadas. A consulta externa automática de valores/modelos de veículos não foi convertida; os campos correspondentes estão disponíveis para preenchimento manual.
 
 ## Pontos de integração da versão completa
 
@@ -15,7 +32,9 @@ Os cinco arquivos originais já foram recuperados e corrigidos em `../../apps-sc
 | `dem_busca_nome_caso` | O filtro já usa tipos de crime e envia `tipoCrime`; preservar esse contrato na migração |
 | `preencherMenusDemandas` | Já alimenta os dois seletores pelo catálogo único; a migração deve trocar a fonte desse catálogo |
 
-## Adaptador disponível
+## Adaptador opcional para a interface legada
+
+O adaptador abaixo é mantido para a futura integração dos demais arquivos originais. A aplicação atual de `public` usa diretamente `mountDemands`, com valores de caso por ID.
 
 ```js
 import {CasesStore} from './cases-store.js';
@@ -46,7 +65,7 @@ Após qualquer reconstrução dos formulários, descartar a integração anterio
 
 ## Salvamento no Firestore
 
-`casoId` é a relação. `casoNome` e `casoNomeChave` são cópias para exibição e consulta. Ao salvar os demais campos de uma demanda, usar `service.resolveCaseForDemand(tx, casoId)` dentro da mesma transação antes de qualquer escrita, junto à autorização do salvamento completo. Não confiar no nome enviado pelo navegador. `vincularCasoDemanda` altera apenas o caso de uma demanda que já existe no Firestore; não substitui o cadastro completo de demandas.
+`casoId` é a relação. `casoNome` e `casoNomeChave` são cópias para exibição e consulta. `demands-service.cjs` já usa `service.resolveCaseForDemand(tx, casoId)` dentro da transação, antes de qualquer escrita, junto à autorização do salvamento completo. O nome enviado pelo navegador não é aceito como fonte do vínculo. `vincularCasoDemanda` continua disponível para alterar somente o caso de uma demanda existente e também incrementa sua versão; o formulário completo usa `salvarDemandaAtiva`.
 
 Uma demanda ainda mantida no Google Sheets não passa a existir no Firestore apenas pela substituição do seletor. A migração de dados e do seu serviço de gravação deve acontecer antes de ativar esse fluxo no portal em produção.
 

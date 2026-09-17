@@ -1,0 +1,277 @@
+{
+  "campos": [
+    {
+      "key": "dataOcorrencia",
+      "label": "Data da Ocorrência",
+      "type": "date",
+      "required": true
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "menu": "status",
+      "required": true
+    },
+    {
+      "key": "unidade",
+      "label": "Unidade Responsável",
+      "menu": "unidade",
+      "required": true
+    },
+    {
+      "key": "equipe",
+      "label": "Equipe",
+      "menu": "equipe"
+    },
+    {
+      "key": "unidadeOutro",
+      "label": "Outra unidade"
+    },
+    {
+      "key": "tipoOcorrencia",
+      "label": "Tipo de Ocorrência",
+      "menu": "tipoOcorrencia",
+      "required": true
+    },
+    {
+      "key": "numOcorrencia",
+      "label": "Nº da Ocorrência",
+      "required": true
+    },
+    {
+      "key": "tipoOcorrenciaOutro",
+      "label": "Outro tipo de ocorrência"
+    },
+    {
+      "key": "nomeVitima",
+      "label": "Nome da Vítima"
+    },
+    {
+      "key": "endereco",
+      "label": "Endereço da Ocorrência",
+      "max": 500
+    },
+    {
+      "key": "bairro",
+      "label": "Bairro"
+    },
+    {
+      "key": "crimeTipo",
+      "label": "Crime - Tipo",
+      "menu": "crimeTipo",
+      "required": true
+    },
+    {
+      "key": "crimeOutro",
+      "label": "Outro crime"
+    },
+    {
+      "key": "procedimentoInstaurado",
+      "label": "Procedimento Instaurado"
+    },
+    {
+      "key": "procedimentoNaoInstaurado",
+      "label": "Procedimento não instaurado pela delegacia",
+      "type": "checkbox"
+    },
+    {
+      "key": "motivoEvolucaoDiversa",
+      "label": "Demanda evoluída por razões diversas",
+      "menu": "motivos"
+    },
+    {
+      "key": "denunciacaoFalsaInfrator",
+      "label": "Nome do infrator da denunciação falsa",
+      "conditional": "falseReport"
+    },
+    {
+      "key": "denunciacaoFalsaTipoProcedimento",
+      "label": "Tipo de procedimento da denunciação falsa",
+      "menu": "tipoOcorrencia",
+      "conditional": "falseReport"
+    },
+    {
+      "key": "denunciacaoFalsaNumeroProcedimento",
+      "label": "Nº do procedimento da denunciação falsa",
+      "conditional": "falseReport"
+    },
+    {
+      "key": "observacoes",
+      "label": "Observações",
+      "type": "textarea",
+      "max": 12000
+    }
+  ],
+  "contadores": [
+    {
+      "key": "suspeitosIdent",
+      "label": "Suspeitos identificados",
+      "details": [
+        {
+          "key": "nomesSuspeitos",
+          "label": "Nome do suspeito"
+        }
+      ]
+    },
+    {
+      "key": "suspeitosPresos",
+      "label": "Quantidade de prisões",
+      "details": [
+        {
+          "key": "nomesPresos",
+          "label": "Nome do preso"
+        }
+      ]
+    },
+    {
+      "key": "veiculosIdentificados",
+      "label": "Veículos identificados",
+      "details": [
+        {
+          "key": "placasVeiculosIdentificados",
+          "label": "Placa"
+        }
+      ]
+    },
+    {
+      "key": "veiculosRecuperados",
+      "label": "Veículos recuperados",
+      "details": [
+        {
+          "key": "placasVeiculosRecuperados",
+          "label": "Placa"
+        },
+        {
+          "key": "tiposVeiculosRecuperados",
+          "label": "Tipo do veículo"
+        },
+        {
+          "key": "marcasVeiculosRecuperados",
+          "label": "Marca"
+        },
+        {
+          "key": "modelosVeiculosRecuperados",
+          "label": "Modelo"
+        },
+        {
+          "key": "anosVeiculosRecuperados",
+          "label": "Ano"
+        },
+        {
+          "key": "valoresVeiculosRecuperados",
+          "label": "Valor (R$)"
+        },
+        {
+          "key": "fontesVeiculosRecuperados",
+          "label": "Fonte de dados"
+        },
+        {
+          "key": "descricoesVeiculosRecuperados",
+          "label": "Descrição"
+        },
+        {
+          "key": "observacoesVeiculosRecuperados",
+          "label": "Observações do veículo"
+        }
+      ]
+    },
+    {
+      "key": "veiculosApreendidos",
+      "label": "Veículos apreendidos",
+      "details": [
+        {
+          "key": "placasVeiculosApreendidos",
+          "label": "Placa"
+        }
+      ]
+    },
+    {
+      "key": "armasApreendidas",
+      "label": "Armas apreendidas",
+      "details": []
+    },
+    {
+      "key": "relatorioTecnico",
+      "label": "Relatórios técnicos",
+      "details": [
+        {
+          "key": "relatorioTecnicoPdfLinks",
+          "label": "PDF do relatório técnico",
+          "type": "pdf"
+        }
+      ]
+    },
+    {
+      "key": "relatorioMissao",
+      "label": "Relatórios de missão",
+      "details": [
+        {
+          "key": "relatorioMissaoPdfLinks",
+          "label": "PDF do relatório de missão",
+          "type": "pdf"
+        }
+      ]
+    },
+    {
+      "key": "relatorioExtracao",
+      "label": "Relatórios de extração",
+      "details": [
+        {
+          "key": "relatorioExtracaoPdfLinks",
+          "label": "PDF do relatório de extração",
+          "type": "pdf"
+        }
+      ]
+    }
+  ],
+  "podeEditar": true,
+  "menus": {
+    "status": [
+      "EM ANDAMENTO",
+      "CONCLUÍDA"
+    ],
+    "unidade": [
+      "UNIDADE DE TESTE"
+    ],
+    "equipe": [
+      "EQUIPE DE TESTE"
+    ],
+    "tipoOcorrencia": [
+      "B.O",
+      "INQUERITO POLICIAL"
+    ],
+    "crimeTipo": [
+      "ROUBO A BANCO",
+      "ROUBO CABOS/FIOS",
+      "ROUBO DE CARGA",
+      "ROUBO DE VEICULO",
+      "ROUBO COM RESTRICAO DE LIBERDADE DA VITIMA",
+      "ROUBO A PESSOA",
+      "ROUBO A RESIDENCIA",
+      "ROUBO DE DISPOSITIVO DE TELEFONIA MOVEL",
+      "ROUBO A ESTABELECIMENTO COMERCIAL",
+      "ROUBO (OUTROS)",
+      "FURTO A RESIDENCIA",
+      "FURTO DE VEICULO",
+      "FURTO DE CARGA",
+      "FURTO DE DISPOSITIVO DE TELEFONIA MOVEL",
+      "FURTO A ESTABELECIMENTO COMERCIAL",
+      "FURTO CABOS/FIOS",
+      "FURTO (OUTROS)",
+      "EXTORSAO MEDIANTE SEQUESTRO",
+      "EXTORSAO COM RESTRIÇÃO A LIBERDADE",
+      "EXTORSAO (OUTROS)",
+      "SEQUESTRO E CARCERE PRIVADO",
+      "ESTELIONATO",
+      "RECEPTACAO",
+      "ORGANIZACAO CRIMINOSA/ASSOCIAÇÃO CRIMINOSA",
+      "TRAFICO DE DROGAS",
+      "OUTROS"
+    ],
+    "motivos": [
+      "INCONSISTÊNCIA INVOLUNTÁRIA NAS INFORMAÇÕES INICIAIS DA VÍTIMA",
+      "VÍTIMA NÃO COLABORATIVA",
+      "DENUNCIAÇÃO FALSA DE CRIME"
+    ]
+  }
+}

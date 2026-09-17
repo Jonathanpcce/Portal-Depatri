@@ -1,22 +1,26 @@
-# Validação — 15/09/2026
+# Validação — atualização de 17/09/2026
 
 ## Executado
 
-- Instalação das dependências Firebase e geração do package-lock das funções.
-- Instalação das dependências dos testes e geração do package-lock principal.
-- 25 testes Node.js aprovados: validação do catálogo, duplicidade, sessão e perfil, gravação atômica simulada, idempotência, paginação, acesso por unidade, vínculos históricos, atualizações assíncronas e comportamento DOM do formulário.
-- Teste DOM completo de cadastrar FURTO DE HILUX / FURTO / FURTO DE VEICULO e verificar sua presença nos três seletores: casos, fenômeno do formulário e fenômeno da busca.
-- Teste de conteúdo HTML como texto, limpeza de seletores no logout e descarte de resposta de demandas do caso anteriormente selecionado.
-- Carregamento das quatro callable functions usando os SDKs Firebase instalados; cada uma recusou chamada sem sessão com `unauthenticated`.
-- Verificação de sintaxe JavaScript e JSON.
+- 47 testes Node.js aprovados: 25 já existentes de casos, catálogo e seletores; 14 novos de serviços de demandas/configuração/PDFs; 8 novos de interface de Demandas Ativas.
+- Os testes de interface chamam os serviços de casos, demandas e anexos sobre o banco e Storage simulados, incluindo cadastrar FURTO DE HILUX, conferir os três seletores, gravar a demanda com esse ID, pesquisar por caso/tipo e consultar a demanda no caso.
+- Cadastro/edição de todos os grupos de campos, contadores e detalhes; bloqueio de procedimento repetido; troca do número sem prender o índice antigo; perda de resposta sem duplicar demanda ou PDF; preservação de históricos e detecção de edição concorrente.
+- Acesso por unidade também nas consultas por ID e nos downloads. Referências de PDFs de outro operador, arquivos incompatíveis, arquivos acima de 10 MB e novos links externos são recusados.
+- Importação dos menus de DB_CONFIG verificada com dados fictícios, incluindo EQUIPE por VALOR_EXTRA e categorias com acentos. Não houve leitura de dados reais.
+- Respostas atrasadas após abertura de novo formulário ou encerramento de sessão não reintroduzem dados anteriores. Nomes semelhantes a HTML permanecem texto.
+- As dez callable functions foram carregadas com os SDKs Firebase instalados e seus handlers recusaram chamadas sem sessão. Esse teste não é uma chamada HTTP autenticada ao Firebase.
+- Configuração pública Web do projeto `portal-depatri-6da3c` aplicada. Sintaxe, JSON e correspondência entre aplicativo e destino verificadas com `node scripts/check.mjs --production`.
 
-## Limites reais
+## Limites
 
-- Os testes de serviço usam um banco simulado com transações atômicas. Não comprovam índices, regras e concorrência no Firestore real.
-- O emulador Firebase foi tentado, mas não iniciou: a versão instalada exige Java 21 ou superior e o ambiente dispõe de versão anterior. Nenhum teste com emulador foi anunciado como aprovado.
-- O navegador remoto recusou a URL localhost com `ERR_BLOCKED_BY_CLIENT`. A validação do DOM foi realizada com jsdom; não houve inspeção visual em navegador, teste de layout móvel nem captura de tela.
-- Não houve execução contra projeto Firebase real, deploy, alteração DNS ou importação de dados.
-- Após o reenvio, os cinco anexos originais foram recuperados e corrigidos em `../../apps-script`, com 15 testes próprios aprovados. A integração deste módulo Firebase no portal completo e a conversão dos demais serviços continuam pendentes. Esses 15 testes não usam Firestore e não devem ser confundidos com os 25 testes desta implementação Firebase.
-- O repositório de destino foi definido como `Jonathanpcce/Portal-Depatri` e o projeto como `portal-depatri-6da3c`. O envio ao GitHub registra o código; não substitui os testes no ambiente Firebase nem publica no domínio.
+- Banco e transações são simulados. Não houve execução em Firestore/Auth/Storage reais nem teste com dois navegadores conectados ao projeto.
+- A tentativa anterior de emulador não iniciou por exigir Java 21 ou superior. Nenhuma execução de emulador foi declarada aprovada.
+- A validação de interface usa jsdom. Não houve inspeção visual em navegador nem conferência do layout móvel; a tentativa anterior de acesso remoto à prévia local foi bloqueada.
+- O formulário preserva os campos dos veículos, mas a consulta automática externa de modelos/valores ainda não foi convertida.
+- A importação real deve criar também os índices de unicidade dos procedimentos e casos e mapear todos os campos. O planejador existente não executa essa importação.
+- PDFs sem vínculo podem permanecer após uma tentativa de salvar interrompida. Não há tarefa automática de limpeza e nenhum histórico é apagado por esta etapa.
+- A configuração Web não comprova que os serviços foram habilitados ou que o operador dispõe de acesso para publicar. Não houve deploy, importação de dados ou alteração DNS.
 
-Antes da publicação final, validar no projeto de teste: cadastro por dois operadores, consulta por delegacia, retomada após perda de conexão, índices Firestore, regras de acesso, autenticação e vínculo ao salvar uma demanda completa.
+Os 15 testes separados dos originais em `../../tests` usam Apps Script/Sheets simulados. Somados aos 47 desta implementação, são 62 testes locais; isso não demonstra a migração dos demais módulos do Portal.
+
+Antes de publicar, validar no destino os perfis reais, menus, índices, regras em conjunto com os serviços já existentes, dois operadores editando simultaneamente, envio/consulta de PDFs e perda de conexão. Manter a versão completa em uso até concluir a migração dos demais módulos.

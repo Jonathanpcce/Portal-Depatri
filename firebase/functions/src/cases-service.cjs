@@ -89,12 +89,12 @@ function createCasesService({db, hash, now, documentId}) {
       const snapshot = await tx.get(ref);
       if (!snapshot.exists) fail('not-found', 'Demanda não encontrada.');
       const relation = await resolveCaseForDemand(tx, request.data.casoId);
-      tx.update(ref, {...relation, atualizadoPor: access.uid, atualizadoEm: now()});
+      tx.update(ref, {...relation, versao: (snapshot.data().versao || 0) + 1, atualizadoPor: access.uid, atualizadoEm: now()});
       tx.create(db.collection('auditoriaEventos').doc(), {acao: 'CASO_DA_DEMANDA_ALTERADO', demandaId,
         casoAnterior: snapshot.data().casoId || null, casoId: relation.casoId, usuarioId: access.uid, data: now()});
       return {demandaId, ...relation};
     });
   }
-  return {bootstrap, create, demands, bindDemand, resolveCaseForDemand};
+  return {bootstrap, create, demands, bindDemand, resolveCaseForDemand, getAccess: context, getCatalog: catalog};
 }
 module.exports = {createCasesService};

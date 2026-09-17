@@ -1,5 +1,5 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Verificação do cadastro | DEPATRI</title><style>:root{color-scheme:dark;--bg:#101112;--panel:#1b1d1f;--field:#25282b;--border:#3b3e42;--gold:#e7c657;--text:#f4f4f0;--muted:#b8bdc4;font-family:Arial,Helvetica,sans-serif}
+<title>Verificação de casos e demandas | DEPATRI</title><style>:root{color-scheme:dark;--bg:#101112;--panel:#1b1d1f;--field:#25282b;--border:#3b3e42;--gold:#e7c657;--text:#f4f4f0;--muted:#b8bdc4;font-family:Arial,Helvetica,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5}
 [hidden]{display:none!important}.topbar{min-height:90px;padding:20px max(24px,calc((100vw - 1240px)/2));display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid #6a5e30;background:#151718}
 .brand{display:flex;gap:14px;align-items:center;font-weight:700;letter-spacing:1px;color:var(--gold)}.brand-mark{width:40px;height:45px;border:1px solid var(--gold);display:grid;place-items:center;font-size:24px;border-radius:8px 8px 18px 18px}.brand small{display:block;font-size:11px;color:var(--muted);font-weight:400;letter-spacing:0;margin-top:3px}
@@ -10,12 +10,17 @@ button{border:1px solid var(--gold);background:var(--gold);color:#1e1d17;font:in
 .case-summary{display:grid;grid-template-columns:1.2fr 1fr 1.5fr;border-top:1px solid #3a3d40;padding-top:20px;margin:24px 0 0;gap:18px}.case-summary dt{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}.case-summary dd{margin:7px 0 0;font-size:14px;overflow-wrap:anywhere}.table-scroll{overflow:auto}table{width:100%;border-collapse:collapse;text-align:left;min-width:650px}th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:500;background:#222528}td,th{padding:12px 14px;border-bottom:1px solid #34373a}td{font-size:13px}td:nth-child(2){color:var(--gold)}[data-more]{margin-top:16px}[data-save-message]{font-size:13px}[data-demand-message]{font-size:13px;margin-bottom:15px}.login-panel{max-width:450px;margin:60px auto}.login-panel label{margin:20px 0}.login-panel button{width:100%}#status:empty{display:none}
 @media(max-width:850px){.fields,.case-summary{grid-template-columns:1fr}.section-heading{align-items:flex-start}.topbar{padding:16px 20px}.brand small{max-width:240px}main{padding:20px}.panel{padding:20px}.case-summary{gap:18px}}
 @media(max-width:500px){h1{font-size:24px}.section-heading{flex-direction:column;gap:16px}.select-row{flex-direction:column;align-items:stretch}.brand small{font-size:10px;max-width:200px}.brand{font-size:14px}.topbar{gap:10px}.brand-mark{display:none}.topbar button{padding:8px 10px}.actions{flex-wrap:wrap}}
+.module-nav{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 30px}.search-fields{grid-template-columns:repeat(3,minmax(0,1fr))}.demand-fields{gap:20px;margin-bottom:24px}.wide-field{grid-column:1/-1}
+textarea{display:block;width:100%;margin-top:8px;padding:12px;resize:vertical;background:var(--field);border:1px solid var(--border);border-radius:5px;color:var(--text);font:inherit;font-size:14px}textarea:focus{outline:2px solid var(--gold);outline-offset:3px}
+.check-label{display:flex;align-items:center;gap:12px}.check-label input{width:20px;height:20px;flex:0 0 20px;order:-1;margin:0;accent-color:var(--gold)}.subheading{margin:30px 0 18px}.detail-row{margin:22px 0 0;border:1px solid var(--border);border-radius:7px;padding:18px}.detail-row legend{font-size:13px;color:var(--gold);padding:0 8px}.detail-row input[type=file]{height:auto;min-height:44px;padding:10px;max-width:100%}.detail-row button{margin-top:10px}.file-label{display:block;margin-top:8px;font-size:12px;color:var(--muted)}
+.badge{display:inline-block;border-radius:4px;padding:5px 8px;font-size:11px;white-space:normal}.badge.positive{background:#163e2d;color:#9ee1b6}.badge.negative{background:#4c2428;color:#ffb8be}.badge.pending{background:#494022;color:#f6df98}input:disabled,textarea:disabled{opacity:.75}.actions+p{margin-top:16px}
+@media(max-width:850px){.search-fields{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.search-fields{grid-template-columns:1fr}.module-nav button{flex:1}.detail-row{padding:12px}}
 </style></head>
-<body><header class="topbar"><div class="brand"><span class="brand-mark">D</span><div>PORTAL DEPATRI<small>Prévia com dados de teste</small></div></div></header>
-<main><div id="cases"></div><section class="panel"><p class="eyebrow">VERIFICAÇÃO DA INTEGRAÇÃO</p><h2>Registro de Demandas</h2>
-<div class="fields"><label>Fenômeno Criminal<select id="dem_caso"></select></label>
-<label>Fenômeno criminal — busca<select id="dem_busca_caso_especifico"></select></label></div>
-<p>Estes seletores demonstram o compartilhamento da lista. O formulário completo de Demandas Ativas ainda depende da integração dos arquivos originais.</p></section></main>
+<body><header class="topbar"><div class="brand"><span class="brand-mark">D</span><div>PORTAL DEPATRI<small>Prévia com dados fictícios</small></div></div></header>
+<main><p>DEMONSTRAÇÃO · Use dados fictícios. Os cadastros e PDFs ficam nesta aba e desaparecem ao recarregar a página.</p>
+<nav class="module-nav" aria-label="Módulos"><button type="button" data-module="cases" aria-pressed="true">Casos prioritários</button><button type="button" class="secondary" data-module="demands" aria-pressed="false">Demandas Ativas</button></nav>
+<div id="cases"></div><div id="demands" hidden></div></main>
 <script type="module">
 const key = value => String(value ?? '').normalize('NFKC').normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '').trim().replace(/\s+/g, ' ').toUpperCase();
@@ -97,13 +102,14 @@ function bindCaseSelector(store, select, {placeholder = 'Selecione um caso', val
   const syncId = () => { select.dataset.casoId = select.selectedOptions[0]?.dataset.casoId || ''; };
   const unsubscribe = store.subscribe(({casos, sessionCleared}) => {
     const previous = sessionCleared ? '' : select.value, previousId = sessionCleared ? '' : select.dataset.casoId || '';
+    const previousLabel = select.selectedOptions[0]?.textContent;
     select.replaceChildren(); option(select, '', placeholder);
     for (const c of casos) option(select, valueMode === 'id' ? c.id : c.nomeCaso, c.nomeCaso, c.id);
     const match = [...select.options].find(o => previousId ? o.dataset.casoId === previousId : o.value === previous);
     if (match) select.value = match.value;
     else if (previous) {
       // Preserva a referência histórica para revisão, sem convertê-la em um caso arbitrário.
-      const old = option(select, previous, `${previous} (registro anterior)`);
+      const old = option(select, previous, previousLabel || `${previous} (registro anterior)`);
       old.dataset.unmapped = 'true'; select.value = previous;
     }
     syncId();
@@ -215,34 +221,280 @@ function mountCases(root, store) {
   return {refresh, setMode, destroy() { destroyed = true; requestVersion++; unbind(); unsubscribe(); root.replaceChildren(); }};
 }
 
-
-// Instalar após a autenticação Firebase e a montagem dos formulários do portal.
-// O formulário legado continua exibindo nomes; casoId acompanha a seleção.
-function integratePortalCases({store, casesRoot, demandFormSelect, demandSearchSelect}) {
-  const bindings = [];
-  if (demandFormSelect) bindings.push(bindCaseSelector(store, demandFormSelect, {valueMode: 'nome', placeholder: 'Selecione'}));
-  if (demandSearchSelect) bindings.push(bindCaseSelector(store, demandSearchSelect, {valueMode: 'nome', placeholder: 'Todos'}));
-  const view = mountCases(casesRoot, store);
-  function selectedCase(select) {
-    if (!select || !select.value) return {casoId: null, casoNome: ''};
-    const casoId = select.dataset.casoId;
-    if (!casoId) throw new Error('O caso deste registro anterior precisa ser conferido antes de alterar o vínculo.');
-    const selected = store.snapshot().casos.find(c => c.id === casoId);
-    if (!selected) throw new Error('Atualize a lista e selecione o caso novamente.');
-    return {casoId, casoNome: selected.nomeCaso};
+class DemandsStore {
+  constructor(call, uuid = () => crypto.randomUUID()) {
+    this.call = call; this.uuid = uuid; this.epoch = 0; this.pending = null; this.saving = false; this.uploads = new WeakMap();
   }
-  return {
-    refresh: () => view.refresh(),
-    setMode: mode => view.setMode(mode === 'novo' || mode === 'NOVO' ? 'novo' : 'visualizar'),
-    getDemandCase: () => selectedCase(demandFormSelect),
-    getSearchCase: () => selectedCase(demandSearchSelect),
-    destroy() { bindings.forEach(dispose => dispose()); view.destroy(); }
+  reset() { this.epoch++; this.pending = null; this.uploads = new WeakMap(); }
+  async request(name, data = {}) {
+    const epoch = this.epoch, response = await this.call(name, data);
+    if (epoch !== this.epoch) throw new Error('A sessão mudou. Entre novamente para continuar.');
+    return response;
+  }
+  bootstrap() { return this.request('obterBootstrapDemandasAtivas'); }
+  get(demandaId) { return this.request('obterDemandaAtiva', {demandaId}); }
+  search(filtros, cursor = null) { return this.request('pesquisarDemandasAtivas', {filtros, cursor}); }
+  async save(dados, current = null) {
+    if (this.saving) throw new Error('Aguarde o salvamento em andamento.');
+    const payload = {dados, ...(current ? {demandaId: current.id, versao: current.versao} : {})};
+    const signature = JSON.stringify(payload);
+    if (this.pending?.signature !== signature) this.pending = {signature, solicitacaoId: this.uuid()};
+    this.saving = true;
+    try {
+      const result = await this.request('salvarDemandaAtiva', {...payload, solicitacaoId: this.pending.solicitacaoId});
+      this.pending = null; return result;
+    } finally { this.saving = false; }
+  }
+  async upload(file, readBase64) {
+    if (!file || file.size > 10 * 1024 * 1024 || !/\.pdf$/i.test(file.name)) throw new Error('Escolha um PDF de até 10 MB.');
+    const epoch = this.epoch;
+    if (!this.uploads.has(file)) this.uploads.set(file, {solicitacaoId: this.uuid()});
+    const entry = this.uploads.get(file);
+    if (entry.saved) return entry.saved;
+    const base64 = await readBase64(file);
+    if (epoch !== this.epoch) throw new Error('Sessão encerrada.');
+    const saved = await this.request('enviarPdfDemanda', {nome: file.name, base64, solicitacaoId: entry.solicitacaoId});
+    entry.saved = saved; return saved;
+  }
+  download(referencia) { return this.request('baixarPdfDemanda', {anexoId: referencia.slice(6)}); }
+}
+
+
+async function mountDemands(root, store, casesStore, {onSaved = async () => {}} = {}) {
+  const doc = root.ownerDocument, win = doc.defaultView;
+  root.innerHTML = `<header class="section-heading"><div><p class="eyebrow">DEMANDAS ATIVAS</p><h1>Registro de Demandas</h1>
+    <p>Cadastre ocorrências, selecione o fenômeno criminal e acompanhe os resultados.</p></div><button type="button" data-new-demand hidden>Nova demanda</button></header>
+    <p data-message role="status" aria-live="polite">Carregando…</p>
+    <section class="panel" data-search-panel hidden><h2>Buscar Ocorrência</h2><form data-search-form><div class="fields search-fields" data-filters></div>
+      <div class="actions"><button type="submit">Buscar</button><button type="button" class="secondary" data-clear-search>Limpar busca</button></div></form></section>
+    <section class="panel" data-editor hidden><h2 data-editor-title>Nova demanda</h2><form data-demand-form>
+      <div class="fields demand-fields" data-fields></div><h2 class="subheading">Contadores e detalhes</h2><div class="fields" data-counters></div>
+      <div data-details></div><div class="actions"><button type="submit" data-save>Salvar demanda</button><button type="button" class="secondary" data-cancel-edit>Fechar</button></div>
+      <p data-save-message role="status" aria-live="polite"></p></form></section>
+    <section class="panel" data-results hidden><h2>Demandas encontradas</h2><p data-search-message role="status" aria-live="polite"></p>
+      <div class="table-scroll"><table><thead><tr><th>Data</th><th>Ocorrência</th><th>Unidade</th><th>Fenômeno Criminal</th><th>Evolução</th><th>Procedimento instaurado</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
+      <button type="button" class="secondary" data-more hidden>Carregar mais</button></section>`;
+  const $ = s => root.querySelector(s), form = $('[data-demand-form]'), searchForm = $('[data-search-form]');
+  let destroyed = false, current = null, editing = false, busy = false, loadVersion = 0, searchVersion = 0;
+  let next = null, lastFilters = {}, searchBusy = false;
+  const controls = new Map(), searchControls = new Map(), counterControls = new Map(), groups = new Map(), disposers = [];
+  const view = {destroy() { if (destroyed) return; destroyed = true; loadVersion++; searchVersion++; disposers.forEach(fn => fn()); root.replaceChildren(); }};
+  // destroy pode ser chamado antes do bootstrap terminar (logout/troca de usuário).
+  root._destroyDemands = view.destroy;
+  let setup;
+  try { setup = await store.bootstrap(); }
+  catch (error) { if (!destroyed) $('[data-message]').textContent = error.message; return view; }
+  if (destroyed) return view;
+  const {menus, campos, contadores, podeEditar} = setup;
+  $('[data-message]').textContent = ''; $('[data-search-panel]').hidden = false; $('[data-new-demand]').hidden = !podeEditar;
+  function element(tag, attrs = {}, text) {
+    const el = doc.createElement(tag); Object.assign(el, attrs); if (text !== undefined) el.textContent = text; return el;
+  }
+  function options(select, values, placeholder = 'Selecione') {
+    const previous = select.value; select.replaceChildren(element('option', {value: ''}, placeholder));
+    values.forEach(value => select.append(element('option', {value}, value)));
+    if (values.includes(previous)) select.value = previous;
+  }
+  function control(parent, spec, values, first) {
+    const label = element('label', {}, spec.label), input = element(spec.menu ? 'select' : spec.type === 'textarea' ? 'textarea' : 'input', {name: spec.key});
+    if (!spec.menu && spec.type !== 'textarea') input.type = spec.type || 'text';
+    if (spec.menu) options(input, values || [], first);
+    else if (spec.type !== 'checkbox') { input.maxLength = spec.max || 150; input.autocomplete = 'off'; }
+    if (spec.type === 'textarea') { input.rows = 4; label.className = 'wide-field'; }
+    if (spec.type === 'checkbox') label.className = 'check-label';
+    input.required = !!spec.required; label.append(input); parent.append(label); return input;
+  }
+  for (const spec of campos) {
+    const input = control($('[data-fields]'), spec, menus[spec.menu]); input.dataset.editable = 'true'; controls.set(spec.key, input);
+  }
+  const caseSelect = control($('[data-fields]'), {key: 'casoId', label: 'Fenômeno Criminal', menu: 'casos'});
+  caseSelect.id = 'dem_caso'; caseSelect.dataset.editable = 'true'; controls.set('casoId', caseSelect);
+  $('[data-fields]').insertBefore(caseSelect.parentElement, controls.get('crimeTipo').parentElement);
+  disposers.push(bindCaseSelector(casesStore, caseSelect, {placeholder: 'Selecione'}));
+  const filters = [
+    {key: 'equipe', label: 'Equipe', menu: 'equipe'}, {key: 'status', label: 'Status', menu: 'status'},
+    {key: 'data', label: 'Data', type: 'date'}, {key: 'numeroProcedimento', label: 'Nº do Procedimento'},
+    {key: 'tipoCrime', label: 'Tipo de crime', menu: 'tipos'}, {key: 'casoId', label: 'Fenômeno criminal', menu: 'casos'},
+    {key: 'pesquisaGeral', label: 'Pesquisa geral'}
+  ];
+  for (const spec of filters) searchControls.set(spec.key, control($('[data-filters]'), spec, menus[spec.menu], 'Todos'));
+  searchControls.get('casoId').id = 'dem_busca_caso_especifico';
+  disposers.push(bindCaseSelector(casesStore, searchControls.get('casoId'), {placeholder: 'Todos'}));
+  disposers.push(casesStore.subscribe(s => options(searchControls.get('tipoCrime'), s.tipos.map(t => t.tipo), 'Todos')));
+  function lock() {
+    for (const input of root.querySelectorAll('[data-editable]')) input.disabled = busy || !podeEditar;
+    controls.get('procedimentoInstaurado').disabled = busy || !podeEditar || controls.get('procedimentoNaoInstaurado').checked;
+    $('[data-save]').hidden = !podeEditar; $('[data-save]').disabled = busy;
+    $('[data-cancel-edit]').disabled = busy; $('[data-new-demand]').disabled = busy;
+    for (const button of root.querySelectorAll('[data-open-demand]')) button.disabled = busy;
+  }
+  function conditions() {
+    for (const spec of campos.filter(s => s.conditional === 'falseReport')) controls.get(spec.key).parentElement.hidden = controls.get('motivoEvolucaoDiversa').value !== menus.motivos[2];
+    lock();
+  }
+  controls.get('procedimentoNaoInstaurado').onchange = () => { if (controls.get('procedimentoNaoInstaurado').checked) controls.get('procedimentoInstaurado').value = ''; lock(); };
+  controls.get('motivoEvolucaoDiversa').onchange = conditions;
+  function addDownload(parent, getReference) {
+    const button = element('button', {type: 'button', className: 'secondary', hidden: !getReference()}, 'Baixar PDF');
+    button.onclick = async () => {
+      const ref = getReference(); if (!ref) return;
+      button.disabled = true;
+      try {
+        if (!ref.startsWith('anexo:')) {
+          const url = new URL(ref); if (url.protocol !== 'https:') throw new Error('Referência do PDF inválida.');
+          win.open(url.href, '_blank', 'noopener,noreferrer'); return;
+        }
+        const saved = await store.download(ref); if (destroyed) return;
+        const bytes = Uint8Array.from(win.atob(saved.base64), c => c.charCodeAt(0));
+        const url = win.URL.createObjectURL(new win.Blob([bytes], {type: 'application/pdf'}));
+        const link = element('a', {href: url, download: saved.nome}); doc.body.append(link); link.click(); link.remove();
+        win.setTimeout(() => win.URL.revokeObjectURL(url), 1000);
+      } catch (error) { if (!destroyed) $('[data-save-message]').textContent = error.message; }
+      finally { if (!destroyed) button.disabled = false; }
+    };
+    parent.append(button); return button;
+  }
+  function renderDetails(counter, value) {
+    const group = groups.get(counter.key), count = Number(counterControls.get(counter.key).value) || 0;
+    if (count < 0 || count > 500 || !Number.isInteger(count)) return;
+    if (value) { group.rows = []; group.root.replaceChildren(); }
+    group.root.hidden = !count || !counter.details.length;
+    for (let i = 0; i < count; i++) {
+      if (group.rows[i]) { group.rows[i].node.hidden = false; continue; }
+      const node = element('fieldset', {className: 'detail-row'}); node.append(element('legend', {}, `${counter.label} · ${i + 1}`));
+      const grid = element('div', {className: 'fields'}); node.append(grid); const data = new Map();
+      for (const detail of counter.details) {
+        const input = control(grid, {...detail, key: `${detail.key}_${i}`, type: detail.type === 'pdf' ? 'file' : 'text', max: 500});
+        input.dataset.editable = 'true';
+        if (detail.type === 'pdf') {
+          input.accept = 'application/pdf,.pdf'; input.dataset.reference = value?.[detail.key]?.[i] || '';
+          const download = addDownload(input.parentElement, () => input.dataset.reference);
+          const existing = element('span', {className: 'file-label'}, input.dataset.reference ? 'PDF já vinculado' : 'PDF opcional, até 10 MB');
+          input.parentElement.append(existing); input._downloadButton = download; input._fileLabel = existing;
+        } else input.value = value?.[detail.key]?.[i] || '';
+        data.set(detail.key, input);
+      }
+      group.root.append(node); group.rows.push({node, data});
+    }
+    group.rows.forEach((row, i) => { row.node.hidden = i >= count; }); lock();
+  }
+  for (const c of contadores) {
+    const input = control($('[data-counters]'), {key: c.key, label: c.label, type: 'number'});
+    Object.assign(input, {min: '0', max: '500', step: '1', value: '0'}); input.dataset.editable = 'true'; counterControls.set(c.key, input);
+    const section = element('div'); $('[data-details]').append(section); groups.set(c.key, {root: section, rows: []});
+    input.onchange = () => renderDetails(c);
+  }
+  function setSelect(select, value) {
+    select.querySelectorAll('[data-legacy-menu]').forEach(o => o.remove());
+    if (value && ![...select.options].some(o => o.value === value)) {
+      const old = element('option', {value}, `${value} (registro anterior)`); old.dataset.legacyMenu = 'true'; select.append(old);
+    }
+    select.value = value || '';
+  }
+  function openEditor(value = null) {
+    loadVersion++; current = value; editing = !!value;
+    $('[data-message]').textContent = '';
+    form.reset();
+    for (const spec of campos) {
+      const input = controls.get(spec.key);
+      if (spec.type === 'checkbox') input.checked = !!value?.[spec.key];
+      else if (spec.menu) setSelect(input, value?.[spec.key]);
+      else input.value = value?.[spec.key] || '';
+    }
+    caseSelect.querySelectorAll('[data-unmapped]').forEach(o => o.remove());
+    if (value && (value.casoId || value.casoNome)) {
+      const known = casesStore.snapshot().casos.find(c => c.id === value.casoId);
+      if (known) caseSelect.value = known.id;
+      else {
+        const old = element('option', {value: `legacy:${value.id}`}, `${value.casoNome || value.casoId} (registro anterior)`);
+        old.dataset.unmapped = 'true'; caseSelect.append(old); caseSelect.value = old.value;
+      }
+    } else caseSelect.value = '';
+    caseSelect.dispatchEvent(new win.Event('change'));
+    for (const c of contadores) { counterControls.get(c.key).value = String(value?.[c.key] || 0); renderDetails(c, value || {}); }
+    $('[data-editor-title]').textContent = value ? podeEditar ? 'Editar demanda' : 'Consultar demanda' : 'Nova demanda';
+    $('[data-editor]').hidden = false; $('[data-save-message]').textContent = ''; conditions();
+  }
+  async function load(id) {
+    if (busy) return; const version = ++loadVersion; $('[data-message]').textContent = 'Carregando demanda…';
+    try { const value = await store.get(id); if (destroyed || version !== loadVersion) return; openEditor(value); $('[data-message]').textContent = ''; }
+    catch (error) { if (!destroyed && version === loadVersion) $('[data-message]').textContent = error.message; }
+  }
+  function drawResults(values) {
+    for (const d of values) {
+      const row = element('tr');
+      for (const value of [d.dataOcorrencia?.split('-').reverse().join('/'), d.procedimentoConcat, d.unidadeResponsavel, d.casoNome, d.statusDemanda]) row.append(element('td', {}, value || '—'));
+      const proc = element('td'), badge = element('span', {className: `badge ${d.procedimentoNaoInstaurado ? 'negative' : d.procedimentoInstaurado ? 'positive' : 'pending'}`},
+        d.procedimentoNaoInstaurado ? 'NÃO INSTAURADO PELA DELEGACIA' : d.procedimentoInstaurado || 'NÃO INFORMADO');
+      proc.append(badge); row.append(proc);
+      const cell = element('td'), open = element('button', {type: 'button', className: 'secondary', disabled: busy}, podeEditar ? 'Abrir / editar' : 'Consultar');
+      open.dataset.openDemand = d.id; open.onclick = () => load(d.id); cell.append(open); row.append(cell); $('tbody').append(row);
+    }
+  }
+  async function search(append = false) {
+    if (append && searchBusy) return;
+    const version = ++searchVersion; searchBusy = true;
+    if (!append) { lastFilters = Object.fromEntries([...searchControls].map(([k, v]) => [k, v.value])); next = null; $('tbody').replaceChildren(); }
+    const cursor = append ? next : null; $('[data-results]').hidden = false; $('[data-more]').hidden = true; $('[data-search-message]').textContent = 'Buscando…';
+    try {
+      const result = await store.search(lastFilters, cursor);
+      if (destroyed || version !== searchVersion) return;
+      drawResults(result.resultados); next = result.proximaPagina; $('[data-more]').hidden = !next;
+      $('[data-search-message]').textContent = next ? 'Há mais registros para pesquisar. Use Carregar mais.' : $('tbody').children.length ? '' : 'Nenhuma demanda encontrada para seu acesso e os filtros escolhidos.';
+    } catch (error) { if (!destroyed && version === searchVersion) $('[data-search-message]').textContent = error.message; }
+    finally { if (version === searchVersion) searchBusy = false; }
+  }
+  const readBase64 = file => new Promise((resolve, reject) => {
+    const reader = new win.FileReader(); reader.onerror = () => reject(new Error('Não foi possível ler o PDF.'));
+    reader.onload = () => resolve(String(reader.result).split(',')[1]); reader.readAsDataURL(file);
+  });
+  form.onsubmit = async event => {
+    event.preventDefault(); if (!podeEditar || busy || !form.reportValidity()) return;
+    busy = true; lock(); $('[data-save-message]').textContent = 'Salvando demanda…';
+    try {
+      const data = Object.fromEntries(campos.map(s => [s.key, s.type === 'checkbox' ? controls.get(s.key).checked : controls.get(s.key).value]));
+      if (!caseSelect.selectedOptions[0]?.dataset.unmapped) data.casoId = caseSelect.value || null;
+      for (const c of contadores) {
+        const count = Number(counterControls.get(c.key).value) || 0; data[c.key] = count;
+        renderDetails(c); const rows = groups.get(c.key).rows.slice(0, count);
+        for (const detail of c.details) {
+          data[detail.key] = [];
+          for (const row of rows) {
+            const input = row.data.get(detail.key);
+            if (detail.type === 'pdf') {
+              if (input.files[0]) {
+                $('[data-save-message]').textContent = 'Enviando PDF…';
+                const uploaded = await store.upload(input.files[0], readBase64); if (destroyed) return;
+                input.dataset.reference = uploaded.referencia; input._downloadButton.hidden = false; input._fileLabel.textContent = uploaded.nome;
+              }
+              data[detail.key].push(input.dataset.reference || '');
+            } else data[detail.key].push(input.value.trim());
+          }
+        }
+      }
+      $('[data-save-message]').textContent = 'Salvando demanda…';
+      const saved = await store.save(data, current); if (destroyed) return;
+      $('[data-message]').textContent = `Demanda salva. ${saved.statusDemanda}.`;
+      current = null; editing = false; $('[data-editor]').hidden = true;
+      await search();
+      try { await onSaved(saved); } catch { if (!destroyed) $('[data-message]').textContent += ' Atualize a consulta do caso para rever as demandas vinculadas.'; }
+    } catch (error) { if (!destroyed) $('[data-save-message]').textContent = error.message; }
+    finally { busy = false; if (!destroyed) lock(); }
   };
+  $('[data-new-demand]').onclick = () => { if (!busy) openEditor(); };
+  $('[data-cancel-edit]').onclick = () => { loadVersion++; current = null; editing = false; $('[data-editor]').hidden = true; };
+  searchForm.onsubmit = event => { event.preventDefault(); return search(); };
+  $('[data-clear-search]').onclick = () => { searchForm.reset(); return search(); };
+  $('[data-more]').onclick = () => search(true);
+  if (podeEditar) openEditor();
+  return {...view, search, open: load, isEditing: () => editing};
 }
 
 const {tipos} = {"schemaVersion":1,"tipos":[{"tipo":"ROUBO","subtipos":["ROUBO A BANCO","ROUBO CABOS/FIOS","ROUBO DE CARGA","ROUBO DE VEICULO","ROUBO COM RESTRICAO DE LIBERDADE DA VITIMA","ROUBO A PESSOA","ROUBO A RESIDENCIA","ROUBO DE DISPOSITIVO DE TELEFONIA MOVEL","ROUBO A ESTABELECIMENTO COMERCIAL","ROUBO (OUTROS)"]},{"tipo":"FURTO","subtipos":["FURTO A RESIDENCIA","FURTO DE VEICULO","FURTO DE CARGA","FURTO DE DISPOSITIVO DE TELEFONIA MOVEL","FURTO A ESTABELECIMENTO COMERCIAL","FURTO CABOS/FIOS","FURTO (OUTROS)"]},{"tipo":"EXTORSAO","subtipos":["EXTORSAO MEDIANTE SEQUESTRO","EXTORSAO COM RESTRIÇÃO A LIBERDADE","EXTORSAO (OUTROS)"]},{"tipo":"SEQUESTRO","subtipos":["SEQUESTRO E CARCERE PRIVADO"]},{"tipo":"ESTELIONATO","subtipos":["ESTELIONATO"]},{"tipo":"RECEPTACAO","subtipos":["RECEPTACAO"]},{"tipo":"ORGANIZACAO CRIMINOSA/ASSOCIAÇÃO CRIMINOSA","subtipos":["ORGANIZACAO CRIMINOSA/ASSOCIAÇÃO CRIMINOSA"]},{"tipo":"TRAFICO DE DROGAS","subtipos":["TRAFICO DE DROGAS"]},{"tipo":"OUTROS","subtipos":[]}]};
-const cases = [], requests = new Map();
-const store = new CasesStore(async (name, payload) => {
+const schema = {"campos":[{"key":"dataOcorrencia","label":"Data da Ocorrência","type":"date","required":true},{"key":"status","label":"Status","menu":"status","required":true},{"key":"unidade","label":"Unidade Responsável","menu":"unidade","required":true},{"key":"equipe","label":"Equipe","menu":"equipe"},{"key":"unidadeOutro","label":"Outra unidade"},{"key":"tipoOcorrencia","label":"Tipo de Ocorrência","menu":"tipoOcorrencia","required":true},{"key":"numOcorrencia","label":"Nº da Ocorrência","required":true},{"key":"tipoOcorrenciaOutro","label":"Outro tipo de ocorrência"},{"key":"nomeVitima","label":"Nome da Vítima"},{"key":"endereco","label":"Endereço da Ocorrência","max":500},{"key":"bairro","label":"Bairro"},{"key":"crimeTipo","label":"Crime - Tipo","menu":"crimeTipo","required":true},{"key":"crimeOutro","label":"Outro crime"},{"key":"procedimentoInstaurado","label":"Procedimento Instaurado"},{"key":"procedimentoNaoInstaurado","label":"Procedimento não instaurado pela delegacia","type":"checkbox"},{"key":"motivoEvolucaoDiversa","label":"Demanda evoluída por razões diversas","menu":"motivos"},{"key":"denunciacaoFalsaInfrator","label":"Nome do infrator da denunciação falsa","conditional":"falseReport"},{"key":"denunciacaoFalsaTipoProcedimento","label":"Tipo de procedimento da denunciação falsa","menu":"tipoOcorrencia","conditional":"falseReport"},{"key":"denunciacaoFalsaNumeroProcedimento","label":"Nº do procedimento da denunciação falsa","conditional":"falseReport"},{"key":"observacoes","label":"Observações","type":"textarea","max":12000}],"contadores":[{"key":"suspeitosIdent","label":"Suspeitos identificados","details":[{"key":"nomesSuspeitos","label":"Nome do suspeito"}]},{"key":"suspeitosPresos","label":"Quantidade de prisões","details":[{"key":"nomesPresos","label":"Nome do preso"}]},{"key":"veiculosIdentificados","label":"Veículos identificados","details":[{"key":"placasVeiculosIdentificados","label":"Placa"}]},{"key":"veiculosRecuperados","label":"Veículos recuperados","details":[{"key":"placasVeiculosRecuperados","label":"Placa"},{"key":"tiposVeiculosRecuperados","label":"Tipo do veículo"},{"key":"marcasVeiculosRecuperados","label":"Marca"},{"key":"modelosVeiculosRecuperados","label":"Modelo"},{"key":"anosVeiculosRecuperados","label":"Ano"},{"key":"valoresVeiculosRecuperados","label":"Valor (R$)"},{"key":"fontesVeiculosRecuperados","label":"Fonte de dados"},{"key":"descricoesVeiculosRecuperados","label":"Descrição"},{"key":"observacoesVeiculosRecuperados","label":"Observações do veículo"}]},{"key":"veiculosApreendidos","label":"Veículos apreendidos","details":[{"key":"placasVeiculosApreendidos","label":"Placa"}]},{"key":"armasApreendidas","label":"Armas apreendidas","details":[]},{"key":"relatorioTecnico","label":"Relatórios técnicos","details":[{"key":"relatorioTecnicoPdfLinks","label":"PDF do relatório técnico","type":"pdf"}]},{"key":"relatorioMissao","label":"Relatórios de missão","details":[{"key":"relatorioMissaoPdfLinks","label":"PDF do relatório de missão","type":"pdf"}]},{"key":"relatorioExtracao","label":"Relatórios de extração","details":[{"key":"relatorioExtracaoPdfLinks","label":"PDF do relatório de extração","type":"pdf"}]}],"podeEditar":true,"menus":{"status":["EM ANDAMENTO","CONCLUÍDA"],"unidade":["UNIDADE DE TESTE"],"equipe":["EQUIPE DE TESTE"],"tipoOcorrencia":["B.O","INQUERITO POLICIAL"],"crimeTipo":["ROUBO A BANCO","ROUBO CABOS/FIOS","ROUBO DE CARGA","ROUBO DE VEICULO","ROUBO COM RESTRICAO DE LIBERDADE DA VITIMA","ROUBO A PESSOA","ROUBO A RESIDENCIA","ROUBO DE DISPOSITIVO DE TELEFONIA MOVEL","ROUBO A ESTABELECIMENTO COMERCIAL","ROUBO (OUTROS)","FURTO A RESIDENCIA","FURTO DE VEICULO","FURTO DE CARGA","FURTO DE DISPOSITIVO DE TELEFONIA MOVEL","FURTO A ESTABELECIMENTO COMERCIAL","FURTO CABOS/FIOS","FURTO (OUTROS)","EXTORSAO MEDIANTE SEQUESTRO","EXTORSAO COM RESTRIÇÃO A LIBERDADE","EXTORSAO (OUTROS)","SEQUESTRO E CARCERE PRIVADO","ESTELIONATO","RECEPTACAO","ORGANIZACAO CRIMINOSA/ASSOCIAÇÃO CRIMINOSA","TRAFICO DE DROGAS","OUTROS"],"motivos":["INCONSISTÊNCIA INVOLUNTÁRIA NAS INFORMAÇÕES INICIAIS DA VÍTIMA","VÍTIMA NÃO COLABORATIVA","DENUNCIAÇÃO FALSA DE CRIME"]}};
+// Adaptador de demonstração: todos os registros e PDFs ficam somente em memória nesta aba.
+const cases = [], demands = new Map(), requests = new Map(), pdfs = new Map();
+async function call(name, payload = {}) {
   if (name === 'obterBootstrapCasosPrioritarios') return {casos: structuredClone(cases), tipos, podeCadastrar: true, proximaPagina: null};
   if (name === 'salvarCasoPrioritarioSemEventos') {
     if (requests.has(payload.solicitacaoId)) return requests.get(payload.solicitacaoId);
@@ -250,11 +502,45 @@ const store = new CasesStore(async (name, payload) => {
     const saved = {id: crypto.randomUUID(), nomeCaso: payload.nomeCaso.toUpperCase(), tipoCrime: payload.tipoCrime, subtipoCrime: payload.subtipoCrime};
     cases.push(saved); requests.set(payload.solicitacaoId, saved); return saved;
   }
-  if (name === 'listarDemandasCasoPrioritario') return {demandas: [], proximaPagina: null};
+  if (name === 'listarDemandasCasoPrioritario') return {demandas: [...demands.values()].filter(d => d.casoId === payload.casoId), proximaPagina: null};
+  if (name === 'obterBootstrapDemandasAtivas') return structuredClone(schema);
+  if (name === 'obterDemandaAtiva') return structuredClone(demands.get(payload.demandaId));
+  if (name === 'salvarDemandaAtiva') {
+    if (requests.has(payload.solicitacaoId)) return requests.get(payload.solicitacaoId);
+    const d = structuredClone(payload.dados);
+    if ([...demands.values()].some(old => old.id !== payload.demandaId && key(old.tipoOcorrencia) === key(d.tipoOcorrencia) && key(old.numOcorrencia) === key(d.numOcorrencia))) throw new Error('O procedimento já foi cadastrado.');
+    const c = cases.find(c => c.id === d.casoId);
+    const saved = {...d, id: payload.demandaId || crypto.randomUUID(), versao: (payload.versao || 0) + 1, casoNome: c?.nomeCaso || '',
+      numeroProcedimento: d.numOcorrencia, procedimentoConcat: `${d.tipoOcorrencia} Nº ${d.numOcorrencia}`, unidadeResponsavel: d.unidade,
+      statusDemanda: d.motivoEvolucaoDiversa || schema.contadores.slice(0, 7).some(c => d[c.key] >= 1) ? 'DEMANDA EVOLUIDA' : 'DEMANDA NÃO EVOLUÍDA'};
+    demands.set(saved.id, saved); requests.set(payload.solicitacaoId, saved); return structuredClone(saved);
+  }
+  if (name === 'pesquisarDemandasAtivas') {
+    const f = payload.filtros || {};
+    return {resultados: [...demands.values()].filter(d => {
+      if (f.casoId && d.casoId !== f.casoId || f.equipe && d.equipe !== f.equipe || f.status && d.status !== f.status || f.data && d.dataOcorrencia !== f.data) return false;
+      if (f.numeroProcedimento && !key(d.procedimentoConcat).includes(key(f.numeroProcedimento))) return false;
+      if (f.tipoCrime && key(d.crimeTipo) !== key(f.tipoCrime) && !tipos.find(t => t.tipo === f.tipoCrime)?.subtipos.includes(d.crimeTipo)) return false;
+      return !f.pesquisaGeral || key(Object.values(d).join(' ')).includes(key(f.pesquisaGeral));
+    }), proximaPagina: null};
+  }
+  if (name === 'enviarPdfDemanda') {
+    pdfs.set(payload.solicitacaoId, {nome: payload.nome, base64: payload.base64});
+    return {referencia: `anexo:${payload.solicitacaoId}`, nome: payload.nome};
+  }
+  if (name === 'baixarPdfDemanda') return pdfs.get(payload.anexoId);
   throw new Error('Operação indisponível na prévia.');
+}
+const store = new CasesStore(call), demandsStore = new DemandsStore(call);
+await store.refresh();
+const caseView = mountCases(document.querySelector('#cases'), store);
+await mountDemands(document.querySelector('#demands'), demandsStore, store, {onSaved: () => caseView.refresh()});
+document.querySelectorAll('[data-module]').forEach(button => {
+  button.onclick = () => {
+    document.querySelector('#cases').hidden = button.dataset.module !== 'cases';
+    document.querySelector('#demands').hidden = button.dataset.module !== 'demands';
+    document.querySelectorAll('[data-module]').forEach(b => { b.classList.toggle('secondary', b !== button); b.setAttribute('aria-pressed', String(b === button)); });
+  };
 });
-const integration = integratePortalCases({store, casesRoot: document.querySelector('#cases'),
-  demandFormSelect: document.querySelector('#dem_caso'), demandSearchSelect: document.querySelector('#dem_busca_caso_especifico')});
-await integration.refresh();
 
 </script></body></html>

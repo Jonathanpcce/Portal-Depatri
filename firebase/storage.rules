@@ -1,0 +1,7 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // PDFs são enviados e consultados pelo servidor, após validar a unidade do usuário.
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}

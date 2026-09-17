@@ -1,6 +1,7 @@
 {
   "functions": [{"source": "functions", "codebase": "depatri-casos", "runtime": "nodejs22", "predeploy": ["node scripts/check.mjs --production"]}],
   "firestore": {"rules": "firestore.rules", "indexes": "firestore.indexes.json"},
+  "storage": {"rules": "storage.rules"},
   "hosting": {
     "predeploy": ["node scripts/check.mjs --production"],
     "public": "public",

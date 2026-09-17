@@ -30,4 +30,8 @@ O catálogo dos testes usa uma amostra representativa da estrutura de `DB_CONFIG
 
 ## Preparação para GitHub e Firebase — 16/09/2026
 
-O repositório indicado é público. Os identificadores internos de recursos em MAESTRO/DASHBOARD foram externalizados, e os testes utilizam somente valores fictícios para essas propriedades. O projeto de destino está definido em `firebase/.firebaserc`. A configuração Web continua incompleta até a leitura autenticada do aplicativo; o check de produção deve recusá-la nesse estado.
+O repositório indicado é público. Os identificadores internos de recursos em MAESTRO/DASHBOARD foram externalizados, e os testes utilizam somente valores fictícios para essas propriedades. O projeto de destino está definido em `firebase/.firebaserc`.
+
+Em 17/09/2026, a configuração Web pública enviada pelo usuário para `portal-depatri-6da3c` foi aplicada. A verificação `node firebase/scripts/check.mjs --production` passou: campos exigidos presentes, sintaxe/JSON válidos e projeto do aplicativo igual ao destino. Isso não autentica o operador, não verifica serviços remotos e não publica o Portal.
+
+Na mesma etapa, o módulo Firebase passou a incluir cadastro, edição e pesquisa de Demandas Ativas, com testes próprios. Os cinco arquivos Apps Script não foram reescritos nesta etapa. Consulte `firebase/docs/VALIDACAO.md`.
