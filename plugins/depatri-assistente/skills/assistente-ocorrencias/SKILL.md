@@ -84,3 +84,24 @@ Interprete frases naturais como:
 
 ## Resultado esperado
 O usuário deve receber uma resposta objetiva com o que foi encontrado/feito, pendências reais e, quando aplicável, a prévia ou os links dos arquivos criados.
+
+
+## Ações do executor RT
+Quando o backend Apps Script/MCP estiver conectado, usar estas ações determinísticas:
+
+- `RT_STATUS`: diagnóstico sem reservar número nem criar pasta.
+- `RT_CONFIGURAR`: configurar pasta-mãe e template no Apps Script.
+- `RT_PREPARAR`: localizar o caso, reservar o próximo número com bloqueio e criar/reutilizar a pasta do RT.
+- `RT_PREVIA`: recuperar o conteúdo estruturado, evoluções e imagens para revisão antes da finalização.
+- `RT_ADICIONAR_IMAGEM`: salvar a imagem original na pasta do RT e registrar legenda, vínculo e inclusão no PDF.
+- `RT_ATUALIZAR_IMAGEM`: alterar legenda, posição, inclusão no RT ou exclusão lógica.
+- `RT_FINALIZAR`: copiar o modelo oficial, inserir texto/imagens/legendas/QR e gerar DOC/PDF.
+
+### Ordem obrigatória do comando "Gerar RT"
+1. Consultar o caso e compor/revisar o conteúdo narrativo.
+2. Executar `RT_PREPARAR`.
+3. Executar `RT_PREVIA` e apresentar a prévia ao usuário.
+4. Aceitar ajustes de texto, imagens e legendas.
+5. Somente quando o usuário pedir para finalizar, executar `RT_FINALIZAR`.
+
+O modelo nunca deve gerar ou consumir um número por conta própria. A numeração é responsabilidade exclusiva de `RT_PREPARAR`, que usa `LockService` e a aba `INTEL_NUMERADOR`.
