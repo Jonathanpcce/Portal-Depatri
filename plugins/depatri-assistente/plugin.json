@@ -34,7 +34,9 @@
           "Faça um ofício para iFood, usando o modelo oficial e criando a pendência de envio.",
           "Faça um mandado de intimação usando o modelo oficial.",
           "Mostre os ofícios pendentes de envio.",
-          "Mostre os ofícios que estão aguardando resposta e verifique se chegou alguma resposta no Gmail."
+          "Mostre os ofícios que estão aguardando resposta e verifique se chegou alguma resposta no Gmail.",
+          "Transcreva o áudio que eu enviar e mantenha a transcrição literal separada da redação técnica.",
+          "Transcreva o áudio que eu enviar e adicione-o ao caso que eu indicar."
         ]
       }
     }
