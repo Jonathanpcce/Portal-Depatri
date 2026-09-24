@@ -37,12 +37,25 @@ Use esta habilidade quando o usuário estiver trabalhando com uma ocorrência, c
 
 ## Fluxo: gerar Relatório Técnico
 1. Recuperar as informações iniciais, evoluções, diligências e imagens do caso.
-2. Consultar o padrão em `references/padrao-relatorio.md`.
-3. Gerar primeiro a narrativa e uma prévia para conferência.
-4. Na prévia, indicar a posição das imagens e respectivas legendas; quando possível, mostrar miniaturas.
-5. Quando o usuário autorizar a finalização, usar o modelo institucional disponível, preservar a formatação do modelo, inserir imagens selecionadas, inserir o QR Code da pasta de mídias e gerar DOC/PDF.
-6. A pasta de mídias deve permanecer como repositório dos arquivos originais; o PDF recebe apenas as imagens relevantes escolhidas.
-7. Retornar links para DOC/PDF/pasta somente quando realmente criados.
+2. Consultar `references/config-rt.md` antes de numerar ou criar a pasta.
+3. Consultar o padrão em `references/padrao-relatorio.md`.
+4. Ao comando "Gerar RT", reservar o próximo número usando exclusivamente a aba `INTEL_NUMERADOR`; o valor visível em `ULTIMO_NUMERO` é o último número já usado e deve ser incrementado em +1.
+5. Só depois de confirmar a reserva do número, criar a subpasta do RT diretamente dentro da pasta-mãe definida em `references/config-rt.md`.
+6. Usar no nome da pasta o novo número, ano e identificador da ocorrência.
+7. O QR Code deve apontar para a subpasta específica recém-criada.
+8. Gerar a narrativa e uma prévia para conferência.
+9. Na prévia, indicar a posição das imagens e respectivas legendas; quando possível, mostrar miniaturas.
+10. Quando o usuário autorizar a finalização, usar o modelo institucional disponível, preservar a formatação do modelo, inserir imagens selecionadas, inserir o QR Code da pasta de mídias e gerar DOC/PDF.
+11. A pasta de mídias deve permanecer como repositório dos arquivos originais; o PDF recebe apenas as imagens relevantes escolhidas.
+12. Retornar links para DOC/PDF/pasta somente quando realmente criados.
+
+### Segurança da numeração
+- Nunca escolher o número pelo maior nome de pasta encontrado no Drive.
+- Nunca usar diretamente o valor atual de `ULTIMO_NUMERO`; ele representa o último RT já utilizado.
+- Sempre usar `ULTIMO_NUMERO + 1`.
+- Atualizar o numerador antes da criação da pasta para reservar o número e reduzir risco de duplicidade.
+- Se não for possível confirmar a atualização do numerador, interromper a geração antes de criar a pasta.
+- Em futura integração MCP/Apps Script, usar bloqueio transacional/LockService para evitar duas reservas simultâneas.
 
 ## Comandos equivalentes
 Interprete frases naturais como:
