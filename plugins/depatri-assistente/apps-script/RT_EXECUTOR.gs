@@ -23,12 +23,88 @@ var PLUGIN_DEPATRI_RT_CFG = {
 function pluginDepatriExecutar(acao, payload) {
   acao = pluginRtNormalizar_(acao);
   payload = payload || {};
+  if (acao === 'RT_CONFIGURAR') return pluginRtConfigurar(payload);
+  if (acao === 'RT_STATUS') return pluginRtStatus(payload);
   if (acao === 'RT_PREPARAR') return pluginRtPreparar(payload);
   if (acao === 'RT_PREVIA') return pluginRtPrevia(payload);
   if (acao === 'RT_ADICIONAR_IMAGEM') return pluginRtAdicionarImagem(payload);
   if (acao === 'RT_ATUALIZAR_IMAGEM') return pluginRtAtualizarImagem(payload);
   if (acao === 'RT_FINALIZAR') return pluginRtFinalizar(payload);
   throw new Error('Ação do plugin não reconhecida: ' + String(acao || ''));
+}
+
+function pluginRtConfigurar(payload) {
+  payload = payload || {};
+  var pastaMaeId = String(payload.pastaMaeId || '').trim();
+  var templateId = String(payload.templateId || '').trim();
+
+  if (!pastaMaeId) throw new Error('pastaMaeId é obrigatório.');
+
+  // Valida antes de salvar.
+  var pasta = DriveApp.getFolderById(pastaMaeId);
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty(PLUGIN_DEPATRI_RT_CFG.PROP_PASTA_MAE_ID, pasta.getId());
+
+  if (templateId) {
+    var modelo = DriveApp.getFileById(templateId);
+    if (modelo.getMimeType() !== MimeType.GOOGLE_DOCS) {
+      throw new Error('templateId deve apontar para um Documento Google nativo.');
+    }
+    props.setProperty(PLUGIN_DEPATRI_RT_CFG.PROP_TEMPLATE_ID, modelo.getId());
+  }
+
+  return {
+    sucesso: true,
+    pastaMaeId: pasta.getId(),
+    nomePastaMae: pasta.getName(),
+    templateId: pluginRtTemplateId_()
+  };
+}
+
+function pluginRtStatus(payload) {
+  payload = payload || {};
+  var erros = [];
+  var pasta = null;
+  var template = null;
+  var ss = null;
+
+  try {
+    ss = pluginRtPlanilha_();
+  } catch (e1) {
+    erros.push('PLANILHA: ' + e1.message);
+  }
+
+  try {
+    pasta = pluginRtPastaMae_();
+  } catch (e2) {
+    erros.push('PASTA_MAE: ' + e2.message);
+  }
+
+  try {
+    var templateId = pluginRtTemplateId_();
+    template = DriveApp.getFileById(templateId);
+    if (template.getMimeType() !== MimeType.GOOGLE_DOCS) {
+      erros.push('TEMPLATE: arquivo não é Google Docs.');
+    }
+  } catch (e3) {
+    erros.push('TEMPLATE: ' + e3.message);
+  }
+
+  if (ss) {
+    ['INTEL_NUMERADOR', 'INVEST_EVOLUCOES', 'ADD_EVOLUCOES', 'ADD_EVOLUCOES_IMAGENS'].forEach(function(nome) {
+      if (!ss.getSheetByName(nome)) erros.push('ABA: ' + nome + ' não encontrada.');
+    });
+  }
+
+  return {
+    sucesso: erros.length === 0,
+    erros: erros,
+    planilha: ss ? ss.getName() : '',
+    pastaMae: pasta ? pasta.getName() : '',
+    pastaMaeId: pasta ? pasta.getId() : '',
+    template: template ? template.getName() : '',
+    templateId: template ? template.getId() : ''
+  };
 }
 
 function pluginRtNormalizar_(valor) {
