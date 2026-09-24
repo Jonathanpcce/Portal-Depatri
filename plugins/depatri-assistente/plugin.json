@@ -1,0 +1,30 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "depatri-assistente",
+  "version": "0.1.0",
+  "description": "Fluxos operacionais do DEPATRI para ocorrências, relatórios técnicos, diligências, imagens e ofícios.",
+  "author": {
+    "name": "NUIP – DEPATRI/PCCE"
+  },
+  "repository": "https://github.com/Jonathanpcce/Portal-Depatri",
+  "keywords": ["depatri", "ocorrencias", "relatorio-tecnico", "oficios", "inteligencia"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "DEPATRI – Assistente",
+        "shortDescription": "Ocorrências, RT, diligências, imagens e ofícios.",
+        "longDescription": "Assistente operacional para organizar ocorrências, consultar dados do Portal/Drive, preparar relatórios técnicos no padrão DEPATRI, trabalhar com imagens e auxiliar na geração de ofícios.",
+        "developerName": "NUIP – DEPATRI/PCCE",
+        "category": "Productivity",
+        "defaultPrompt": [
+          "Gere o Relatório Técnico do caso que eu indicar usando tudo que já temos e mostre a prévia antes de finalizar.",
+          "Crie ou abra a pasta de imagens do caso que eu indicar e organize os arquivos vinculados.",
+          "Analise a imagem que eu enviar, descreva apenas o que for objetivamente visível e prepare uma legenda técnica.",
+          "Adicione a diligência que eu enviar ao caso indicado, ajustando somente a redação sem alterar os fatos.",
+          "Consulte o caso que eu indicar e resuma tudo que temos até agora.",
+          "Prepare um ofício DEPATRI a partir das informações que eu fornecer e do modelo correspondente."
+        ]
+      }
+    }
+  }
+}
