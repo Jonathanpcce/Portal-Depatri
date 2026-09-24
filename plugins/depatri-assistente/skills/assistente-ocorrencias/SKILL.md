@@ -21,6 +21,9 @@ Use esta habilidade quando o usuário estiver trabalhando com uma ocorrência, c
 4. Quando o caso existir, atualizar o caso correto em vez de criar outro.
 5. Organizar anexos em pasta própria quando o usuário pedir criação/organização no Drive.
 
+## Kanban de diligências
+Consultar `references/kanban-diligencias.md` sempre que a tarefa envolver criação, consulta, atualização, priorização ou conclusão de diligências. Toda diligência relevante deve poder aparecer no quadro operacional.
+
 ## Fluxo: adicionar diligência
 1. Identificar o caso.
 2. Preservar integralmente os fatos fornecidos.
@@ -68,6 +71,10 @@ Interprete frases naturais como:
 - "Me mostre a prévia"
 - "Finalize o RT"
 - "Consulte o caso..."
+- "Mostre o Kanban"
+- "O que temos para fazer?"
+- "O que está aguardando resposta?"
+- "O que está atrasado?"
 
 ## Resultado esperado
 O usuário deve receber uma resposta objetiva com o que foi encontrado/feito, pendências reais e, quando aplicável, a prévia ou os links dos arquivos criados.
