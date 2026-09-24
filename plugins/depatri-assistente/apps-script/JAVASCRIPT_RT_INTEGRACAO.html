@@ -1,0 +1,154 @@
+<!--
+DEPATRI - integração do frontend do Portal com o novo RT_EXECUTOR.gs
+
+SUBSTITUA no JAVASCRIPT.html as funções gerarRTDesenvFrontend()
+e finalizarGeracaoRtDesenvFrontend_() pelas versões abaixo.
+
+O QR continua sendo gerado localmente no navegador por gerarQrCardRtCanvas_().
+-->
+
+<script>
+function gerarRTDesenvFrontend() {
+    var num = (DESENV_DEMANDAS_STATE.demandaAtual && DESENV_DEMANDAS_STATE.demandaAtual.numOcorrencia) || '';
+
+    if (!num) {
+        return alert('Abra uma demanda antes de gerar o RT.');
+    }
+
+    if (!confirm('Gerar Relatório Técnico para esta demanda?')) {
+        return;
+    }
+
+    var box = document.getElementById('desenvLinksRtBox');
+
+    if (box) {
+        box.innerHTML = '<div class="alert alert-secondary"><i class="fas fa-spinner fa-spin"></i> Preparando RT...</div>';
+    }
+
+    google.script.run
+        .withSuccessHandler(function(prep) {
+            if (!prep || !prep.sucesso) {
+                if (box) {
+                    box.innerHTML = '<div class="alert alert-danger">Falha ao preparar RT.</div>';
+                }
+                return;
+            }
+
+            if (!prep.linkDriveImagens) {
+                if (box) {
+                    box.innerHTML = '<div class="alert alert-danger">A pasta do RT não foi criada/vinculada.</div>';
+                }
+                return;
+            }
+
+            if (box) {
+                box.innerHTML = '<div class="alert alert-secondary"><i class="fas fa-spinner fa-spin"></i> Carregando brasão oficial da PCCE...</div>';
+            }
+
+            google.script.run
+                .withSuccessHandler(function(retBrasao) {
+                    if (!retBrasao || !retBrasao.sucesso || !retBrasao.dataUrl) {
+                        if (box) {
+                            box.innerHTML = '<div class="alert alert-danger">'
+                                + escRtDesenv_((retBrasao && retBrasao.erro) || 'Não foi possível carregar o brasão da PCCE.')
+                                + '</div>';
+                        }
+                        return;
+                    }
+
+                    prep.brasaoBase64 = retBrasao.dataUrl;
+
+                    if (box) {
+                        box.innerHTML = '<div class="alert alert-secondary"><i class="fas fa-spinner fa-spin"></i> Gerando QR Code personalizado DEPATRI...</div>';
+                    }
+
+                    gerarQrCardRtCanvas_(prep, function(qrBase64) {
+                        finalizarGeracaoRtDesenvFrontend_(num, qrBase64, box);
+                    });
+                })
+                .withFailureHandler(function(err) {
+                    if (box) {
+                        box.innerHTML = '<div class="alert alert-danger">'
+                            + escRtDesenv_((err && err.message) || err || 'Erro ao carregar brasão da PCCE.')
+                            + '</div>';
+                    }
+                })
+                .obterBrasaoRtDesenvBase64();
+        })
+        .withFailureHandler(function(err) {
+            if (box) {
+                box.innerHTML = '<div class="alert alert-danger">'
+                    + escRtDesenv_((err && err.message) || err || 'Erro ao preparar RT.')
+                    + '</div>';
+            }
+        })
+        .pluginDepatriExecutar('RT_PREPARAR', {
+            usuarioLogin: usuarioAtual.login,
+            numOcorrencia: num
+        });
+}
+
+function finalizarGeracaoRtDesenvFrontend_(num, qrBase64, box) {
+    if (!qrBase64) {
+        if (box) {
+            box.innerHTML = '<div class="alert alert-danger">QR Code não foi gerado. O RT não será finalizado.</div>';
+        }
+        return;
+    }
+
+    if (box) {
+        box.innerHTML = '<div class="alert alert-secondary"><i class="fas fa-spinner fa-spin"></i> Gerando documento e PDF...</div>';
+    }
+
+    google.script.run
+        .withSuccessHandler(function(ret) {
+            if (ret && ret.sucesso) {
+                if (box) {
+                    var botoes = '';
+
+                    botoes += '<a class="btn btn-sm" target="_blank" href="' + escRtDesenv_(ret.urlDoc || '') + '" '
+                        + 'style="background:#0d6efd; color:#ffffff; border:1px solid #0d6efd; font-weight:600;">'
+                        + '<i class="fas fa-file-word me-1"></i> Abrir DOC'
+                        + '</a>';
+
+                    botoes += '<a class="btn btn-sm" target="_blank" href="' + escRtDesenv_(ret.urlPdf || '') + '" '
+                        + 'style="background:#dc3545; color:#ffffff; border:1px solid #dc3545; font-weight:600;">'
+                        + '<i class="fas fa-file-pdf me-1"></i> Abrir PDF'
+                        + '</a>';
+
+                    if (ret.linkDriveImagens) {
+                        botoes += '<a class="btn btn-sm" target="_blank" href="' + escRtDesenv_(ret.linkDriveImagens || '') + '" '
+                            + 'style="background:#ffc107; color:#111111; border:1px solid #d39e00; font-weight:700;">'
+                            + '<i class="fas fa-folder-open me-1"></i> Abrir Pasta'
+                            + '</a>';
+                    }
+
+                    box.innerHTML = '<div class="alert alert-success" style="border-left:5px solid #198754;">'
+                        + '<div><strong>RT ' + escRtDesenv_(ret.numeroRt || '') + ' gerado com sucesso.</strong></div>'
+                        + '<div class="d-flex gap-2 flex-wrap mt-2 align-items-center">' + botoes + '</div>'
+                        + '</div>';
+                }
+
+                abrirDemandaDesenv(num);
+            } else {
+                if (box) {
+                    box.innerHTML = '<div class="alert alert-danger">'
+                        + escRtDesenv_((ret && ret.erro) || 'Falha ao gerar RT.')
+                        + '</div>';
+                }
+            }
+        })
+        .withFailureHandler(function(err) {
+            if (box) {
+                box.innerHTML = '<div class="alert alert-danger">'
+                    + escRtDesenv_((err && err.message) || err || 'Erro ao finalizar RT.')
+                    + '</div>';
+            }
+        })
+        .pluginDepatriExecutar('RT_FINALIZAR', {
+            usuarioLogin: usuarioAtual.login,
+            numOcorrencia: num,
+            qrBase64: qrBase64
+        });
+}
+</script>
