@@ -921,3 +921,22 @@ function testarExecutorRtDepatri() {
   Logger.log(JSON.stringify(resultado, null, 2));
   return resultado;
 }
+
+
+/**
+ * PRIMEIRO TESTE REAL DE PREPARAÇÃO DO RT
+ * Caso: IP Nº 308-85/2026
+ * Usuário: admin
+ *
+ * ATENÇÃO: esta função reserva/consome o próximo número oficial de RT
+ * caso o processo ainda não possua NUM_RT.
+ */
+function testarPreparacaoRtIp30885() {
+  var resultado = pluginDepatriExecutar('RT_PREPARAR', {
+    usuarioLogin: 'admin',
+    numOcorrencia: 'IP Nº 308-85/2026'
+  });
+
+  Logger.log(JSON.stringify(resultado, null, 2));
+  return resultado;
+}
