@@ -31,6 +31,9 @@ Consultar `references/kanban-diligencias.md` sempre que a tarefa envolver criaç
 4. Não introduzir conclusão que o usuário não tenha solicitado.
 5. Vincular imagens e suas legendas à evolução quando solicitado.
 
+## Imagens no Relatório Técnico
+Consultar `references/imagens-rt.md` sempre que o usuário quiser salvar, vincular, legendar, posicionar, remover ou inserir uma imagem no RT.
+
 ## Fluxo: analisar imagem
 1. Descrever somente características efetivamente visíveis.
 2. Não identificar uma pessoa apenas por aparência, salvo quando o usuário fornecer identificação externa válida e pedir comparação descritiva.
@@ -67,6 +70,9 @@ Interprete frases naturais como:
 - "Crie pasta de imagem"
 - "Abra a pasta do RT"
 - "Analise essa imagem"
+- "Adicione esta imagem ao RT"
+- "Coloque essa imagem depois desta diligência"
+- "Salve essa imagem apenas no Drive"
 - "Adicione esta diligência ao caso..."
 - "Me mostre a prévia"
 - "Finalize o RT"
