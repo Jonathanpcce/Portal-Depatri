@@ -739,18 +739,17 @@ function pluginRtInserirCorpoEstruturado_(body, payload, demanda, evolucoes, ima
 }
 
 function pluginRtQrBlob_(link, qrBase64) {
-  if (qrBase64) {
-    return pluginRtBlob_({ base64: qrBase64, nome: 'QR_RT.png', mimeType: 'image/png' }, 'QR_RT.png');
+  if (!qrBase64) {
+    throw new Error(
+      'QR Code não informado. Gere o QR no frontend do Portal e envie qrBase64 ao RT_FINALIZAR.'
+    );
   }
 
-  var url = 'https://chart.googleapis.com/chart?cht=qr&chs=320x320&chld=M|1&chl=' +
-    encodeURIComponent(String(link || ''));
-  var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
-
-  if (response.getResponseCode() >= 400) {
-    throw new Error('Não foi possível gerar o QR Code da pasta do RT.');
-  }
-  return response.getBlob().setName('QR_RT.png');
+  return pluginRtBlob_({
+    base64: qrBase64,
+    nome: 'QR_RT.png',
+    mimeType: 'image/png'
+  }, 'QR_RT.png');
 }
 
 function pluginRtInserirQr_(body, link, qrBase64) {
@@ -862,8 +861,11 @@ function pluginRtFinalizar(payload) {
     throw new Error('O template do RT não é um Documento Google nativo.');
   }
 
-  var docFile = modelo.makeCopy(nomeBase, pasta);
-  var doc = DocumentApp.openById(docFile.getId());
+  var docFile = null;
+  var pdfFile = null;
+  try {
+    docFile = modelo.makeCopy(nomeBase, pasta);
+    var doc = DocumentApp.openById(docFile.getId());
   var body = doc.getBody();
   var linkPasta = pasta.getUrl();
 
@@ -896,9 +898,9 @@ function pluginRtFinalizar(payload) {
   pluginRtInserirQr_(body, linkPasta, payload.qrBase64 || '');
   doc.saveAndClose();
 
-  var pdfFile = pluginRtExportarPdf_(docFile.getId(), pasta, nomeBase);
+    pdfFile = pluginRtExportarPdf_(docFile.getId(), pasta, nomeBase);
 
-  pluginRtAtualizarDemanda_(encontrada, {
+    pluginRtAtualizarDemanda_(encontrada, {
     NUM_RT: numeroRt,
     PASTA_RT_ID: pasta.getId(),
     LINK_DRIVE_IMAGENS: linkPasta,
@@ -910,15 +912,22 @@ function pluginRtFinalizar(payload) {
     DATA_ATUALIZACAO: pluginRtAgora_()
   });
 
-  return {
-    sucesso: true,
-    reutilizado: false,
-    numeroRt: numeroRt,
-    urlDoc: docFile.getUrl(),
-    urlPdf: pdfFile.getUrl(),
-    linkDriveImagens: linkPasta,
-    quantidadeFiguras: qtdFiguras
-  };
+    return {
+      sucesso: true,
+      reutilizado: false,
+      numeroRt: numeroRt,
+      urlDoc: docFile.getUrl(),
+      urlPdf: pdfFile.getUrl(),
+      linkDriveImagens: linkPasta,
+      quantidadeFiguras: qtdFiguras
+    };
+  } catch (erroFinalizacao) {
+    // Se a montagem falhar antes de ser registrada na demanda, elimina somente
+    // os artefatos criados por esta tentativa para evitar documentos órfãos.
+    try { if (pdfFile) pdfFile.setTrashed(true); } catch (ePdf) {}
+    try { if (docFile) docFile.setTrashed(true); } catch (eDoc) {}
+    throw erroFinalizacao;
+  }
 }
 
 
