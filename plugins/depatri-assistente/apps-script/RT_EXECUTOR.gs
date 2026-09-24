@@ -897,3 +897,27 @@ function pluginRtFinalizar(payload) {
     quantidadeFiguras: qtdFiguras
   };
 }
+
+
+/**
+ * CONFIGURAÇÃO INICIAL — execute uma única vez pelo editor do Apps Script.
+ * Não consome número de RT.
+ */
+function configurarExecutorRtDepatri() {
+  var resultado = pluginRtConfigurar({
+    pastaMaeId: '1X6JiyPbZR9Tz7pHih09jm2degIpdcFDi',
+    templateId: '1WstQ9shY36U_W8j7i4vOkXRJH7ClA96o4nZIcLUrEt4'
+  });
+  Logger.log(JSON.stringify(resultado, null, 2));
+  return resultado;
+}
+
+/**
+ * DIAGNÓSTICO — pode executar quantas vezes quiser.
+ * Não consome número e não cria pasta de RT.
+ */
+function testarExecutorRtDepatri() {
+  var resultado = pluginRtStatus({});
+  Logger.log(JSON.stringify(resultado, null, 2));
+  return resultado;
+}
