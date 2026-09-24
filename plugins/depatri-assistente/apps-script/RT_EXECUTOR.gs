@@ -415,8 +415,24 @@ function pluginRtPrevia(payload) {
 
   var blocos = [];
   var inicial = String(payload.textoInicial || demanda.informacoesIniciais || '').trim();
+  var descricao = String(payload.descricao || demanda.descricao || '').trim();
+
   if (inicial) {
-    blocos.push({ tipo: 'TEXTO', idEvolucao: '', texto: inicial, imagens: porEvolucao[''] || [] });
+    blocos.push({
+      tipo: 'INFORMACOES_INICIAIS',
+      idEvolucao: '',
+      texto: inicial,
+      imagens: porEvolucao[''] || []
+    });
+  }
+
+  if (descricao && pluginRtNormalizar_(descricao) !== pluginRtNormalizar_(inicial)) {
+    blocos.push({
+      tipo: 'DESCRICAO',
+      idEvolucao: '',
+      texto: descricao,
+      imagens: []
+    });
   }
 
   (preparado.evolucoes || []).forEach(function(ev) {
@@ -437,7 +453,7 @@ function pluginRtPrevia(payload) {
     sucesso: true,
     numeroRt: preparado.numeroRt,
     linkDriveImagens: preparado.linkDriveImagens,
-    resumo: String(payload.resumo || demanda.resumo || ''),
+    resumo: pluginRtResumo_(payload, demanda),
     blocos: blocos,
     imagensSomenteDrive: imagens.filter(function(img) { return !img.incluirNoRt; }),
     quantidadeImagensNoRt: imagens.filter(function(img) { return img.incluirNoRt; }).length
@@ -762,17 +778,24 @@ function pluginRtInserirQr_(body, link, qrBase64) {
 }
 
 function pluginRtResumo_(payload, demanda) {
-  var informado = String(payload.resumo || '').trim();
+  var informado = String(payload.resumo || '').replace(/\s+/g, ' ').trim();
   if (informado) return informado;
 
+  var informacoes = String(demanda.informacoesIniciais || '').replace(/\s+/g, ' ').trim();
   var salvo = String(demanda.resumo || '').replace(/\s+/g, ' ').trim();
-  if (salvo) return salvo;
 
-  var base = String(demanda.informacoesIniciais || '').replace(/\s+/g, ' ').trim();
+  // Se o resumo salvo for realmente diferente das informações iniciais,
+  // preserva o resumo próprio cadastrado.
+  if (salvo && pluginRtNormalizar_(salvo) !== pluginRtNormalizar_(informacoes)) {
+    return salvo;
+  }
+
+  var base = informacoes || salvo;
   if (!base) return '';
 
   var frases = base.match(/[^.!?]+[.!?]+/g) || [];
   var resumo = frases.slice(0, 2).join(' ').trim() || base;
+
   if (resumo.length > 700) {
     resumo = resumo.substring(0, 700).replace(/\s+\S*$/, '').trim();
     if (resumo && !/[.!?]$/.test(resumo)) resumo += '.';
