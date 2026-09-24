@@ -7,7 +7,13 @@
     "name": "NUIP – DEPATRI/PCCE"
   },
   "repository": "https://github.com/Jonathanpcce/Portal-Depatri",
-  "keywords": ["depatri", "ocorrencias", "relatorio-tecnico", "oficios", "inteligencia"],
+  "keywords": [
+    "depatri",
+    "ocorrencias",
+    "relatorio-tecnico",
+    "oficios",
+    "inteligencia"
+  ],
   "extensions": {
     "com.openai": {
       "interface": {
@@ -21,8 +27,14 @@
           "Crie ou abra a pasta de imagens do caso que eu indicar e organize os arquivos vinculados.",
           "Analise a imagem que eu enviar, descreva apenas o que for objetivamente visível e prepare uma legenda técnica.",
           "Adicione a diligência que eu enviar ao caso indicado, ajustando somente a redação sem alterar os fatos.",
-          "Consulte o caso que eu indicar e resuma tudo que temos até agora.",
-          "Prepare um ofício DEPATRI a partir das informações que eu fornecer e do modelo correspondente."
+          "Faça um ofício de imagens a partir do caso que eu indicar, usando o modelo oficial e criando a pendência de envio.",
+          "Faça um ofício para locadora pela placa, usando o modelo oficial e criando a pendência de envio.",
+          "Faça um ofício para provedor de internet, usando o modelo oficial e criando a pendência de envio.",
+          "Faça um ofício para empresa de telefonia, usando o modelo oficial e criando a pendência de envio.",
+          "Faça um ofício para iFood, usando o modelo oficial e criando a pendência de envio.",
+          "Faça um mandado de intimação usando o modelo oficial.",
+          "Mostre os ofícios pendentes de envio.",
+          "Mostre os ofícios que estão aguardando resposta e verifique se chegou alguma resposta no Gmail."
         ]
       }
     }
