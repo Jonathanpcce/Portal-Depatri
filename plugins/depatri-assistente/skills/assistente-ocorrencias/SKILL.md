@@ -5,6 +5,19 @@ description: Organizar e desenvolver ocorrências do DEPATRI; analisar B.O., CIO
 
 Use esta habilidade quando o usuário estiver trabalhando com uma ocorrência, caso, diligência, imagem ou relatório técnico do DEPATRI.
 
+## Arquitetura preferencial: ChatGPT direto na base
+- O Portal DEPATRI **não é requisito** para operar esta habilidade.
+- O ChatGPT deve preferir trabalhar diretamente com os conectores autorizados do Google Sheets, Drive e Docs quando essas ações estiverem disponíveis.
+- A planilha `PLANILHA PORTAL DEPATRI` é a fonte de estado dos casos; o Google Drive é o repositório de mídias/modelos/documentos; o ChatGPT atua como camada de interpretação e orquestração.
+- O Portal permanece como interface alternativa para usuários humanos, dashboards e rotinas administrativas, mas não deve ser exigido para receber B.O., registrar evoluções, armazenar imagens, montar RT ou preparar ofícios.
+- Ao receber informações no chat, persistir os dados relevantes na base antes de depender apenas do contexto da conversa, evitando perda de estado entre sessões.
+- Para um novo B.O./CIOPS/procedimento, criar ou atualizar o registro correto em `INVEST_EVOLUCOES`.
+- Para novas diligências/evoluções, registrar em `ADD_EVOLUCOES` e manter o vínculo com a ocorrência.
+- Para imagens, manter o arquivo original no Drive e registrar os metadados em `ADD_EVOLUCOES_IMAGENS`, incluindo vínculo, legenda, ordem, `INCLUIR_NO_RT` e `POSICAO_RT`.
+- Para RT, usar o modelo oficial do Google Docs diretamente do Drive, preencher as tags, inserir textos/imagens/QR, exportar PDF e gravar os links resultantes na planilha.
+- Para ofícios, usar diretamente os modelos cadastrados em `DB_TEXTOS_DOCS`, preservando a formatação do Google Docs e registrando o documento em `INTEL_OFICIOS`.
+- Quando houver uma ação determinística que exija exclusão mútua/numeração concorrente e não existir mecanismo atômico disponível pelo conector, priorizar o executor Apps Script apenas para essa operação de backend. Isso não cria dependência da interface do Portal.
+
 ## Princípios
 - As instruções explícitas do usuário prevalecem sobre este fluxo.
 - Não invente fatos, nomes, placas, horários, locais, vínculos ou conclusões.
