@@ -68,9 +68,9 @@ Consultar `references/imagens-rt.md` sempre que o usuário quiser salvar, vincul
    - OUTROS
 6. Se o usuário selecionar **OUTROS**, perguntar qual é a delegacia/unidade exata para difusão e usar exatamente a denominação informada.
 7. Não perguntar novamente pela DIFUSÃO quando ela já tiver sido definida anteriormente na conversa ou estiver claramente registrada no caso.
-8. Ao comando "Gerar RT", reservar o próximo número usando exclusivamente a aba `INTEL_NUMERADOR`; o valor visível em `ULTIMO_NUMERO` é o último número já usado e deve ser incrementado em +1.
-9. Só depois de confirmar a reserva do número, criar a subpasta do RT diretamente dentro da pasta-mãe definida em `references/config-rt.md`.
-10. Usar no nome da pasta o novo número, ano e identificador da ocorrência.
+8. **Não consumir nem incrementar número durante cadastro, evoluções, imagens, preparação ou prévia.**
+9. Somente quando o usuário mandar **"Gerar RT"** ou autorizar a geração final, ler naquele momento a aba `INTEL_NUMERADOR`; considerar `ULTIMO_NUMERO` como o último RT utilizado, calcular `NOVO_NUMERO = ULTIMO_NUMERO + 1`, gravar `NOVO_NUMERO` de volta em `ULTIMO_NUMERO` e confirmar por nova leitura.
+10. Usar o número recém-gravado como número oficial do RT e, então, criar/renomear a pasta definitiva com o novo número, ano e identificador da ocorrência.
 11. O QR Code deve apontar para a subpasta específica recém-criada.
 12. Gerar a narrativa e uma prévia para conferência.
 13. Na prévia, indicar também a DIFUSÃO selecionada, além da posição das imagens e respectivas legendas; quando possível, mostrar miniaturas.
@@ -80,11 +80,13 @@ Consultar `references/imagens-rt.md` sempre que o usuário quiser salvar, vincul
 
 ### Segurança da numeração
 - Nunca escolher o número pelo maior nome de pasta encontrado no Drive.
-- Nunca usar diretamente o valor atual de `ULTIMO_NUMERO`; ele representa o último RT já utilizado.
-- Sempre usar `ULTIMO_NUMERO + 1`.
-- Atualizar o numerador antes da criação da pasta para reservar o número e reduzir risco de duplicidade.
-- Se não for possível confirmar a atualização do numerador, interromper a geração antes de criar a pasta.
-- Em futura integração MCP/Apps Script, usar bloqueio transacional/LockService para evitar duas reservas simultâneas.
+- Nunca consumir número em prévia, preparação, cadastro de evolução ou upload de imagem.
+- No instante da geração final, ler o valor atual de `ULTIMO_NUMERO`; ele representa o último RT já utilizado.
+- Calcular `NOVO_NUMERO = ULTIMO_NUMERO + 1`.
+- **Incrementar a própria planilha**, gravando `NOVO_NUMERO` em `INTEL_NUMERADOR.ULTIMO_NUMERO`.
+- Confirmar por nova leitura que a planilha passou a registrar o novo número antes de concluir o RT.
+- Se a gravação/confirmação falhar, interromper a geração.
+- Quando houver risco de duas gerações simultâneas, usar bloqueio transacional/LockService apenas no momento desse incremento.
 
 ## Comandos equivalentes
 Interprete frases naturais como:
@@ -114,18 +116,18 @@ Quando o backend Apps Script/MCP estiver conectado, usar estas ações determin�
 
 - `RT_STATUS`: diagnóstico sem reservar número nem criar pasta.
 - `RT_CONFIGURAR`: configurar pasta-mãe e template no Apps Script.
-- `RT_PREPARAR`: localizar o caso, reservar o próximo número com bloqueio e criar/reutilizar a pasta do RT.
+- `RT_PREPARAR`: localizar o caso e preparar/reutilizar a pasta de trabalho, **sem consumir número**.
 - `RT_PREVIA`: recuperar o conteúdo estruturado, evoluções e imagens para revisão antes da finalização.
 - `RT_ADICIONAR_IMAGEM`: salvar a imagem original na pasta do RT e registrar legenda, vínculo e inclusão no PDF.
 - `RT_ATUALIZAR_IMAGEM`: alterar legenda, posição, inclusão no RT ou exclusão lógica.
-- `RT_FINALIZAR`: copiar o modelo oficial, inserir texto/imagens/legendas/QR e gerar DOC/PDF.
+- `RT_FINALIZAR`: no momento da geração, ler `INTEL_NUMERADOR`, incrementar `ULTIMO_NUMERO` em +1 e confirmar a gravação; depois copiar o modelo oficial, inserir texto/imagens/legendas/QR e gerar DOC/PDF.
 
 ### Ordem obrigatória do comando "Gerar RT"
 1. Consultar o caso e compor/revisar o conteúdo narrativo.
 2. Confirmar a **DIFUSÃO**. Se estiver ausente, perguntar usando a lista institucional definida acima; se a resposta for **OUTROS**, pedir a delegacia/unidade exata.
-3. Executar `RT_PREPARAR`.
+3. Executar `RT_PREPARAR` sem alterar o numerador.
 4. Executar `RT_PREVIA` e apresentar a prévia ao usuário, incluindo a DIFUSÃO.
-5. Aceitar ajustes de texto, imagens e legendas.
-6. Somente quando o usuário pedir para finalizar, executar `RT_FINALIZAR`.
+5. Aceitar ajustes de texto, imagens e legendas sem consumir número.
+6. Somente quando o usuário pedir para **Gerar RT/finalizar**, executar `RT_FINALIZAR`; nessa execução, ler o numerador atual, calcular +1, **incrementar `ULTIMO_NUMERO` na planilha**, confirmar a gravação e usar esse número no RT.
 
-O modelo nunca deve gerar ou consumir um número por conta própria. A numeração é responsabilidade exclusiva de `RT_PREPARAR`, que usa `LockService` e a aba `INTEL_NUMERADOR`.
+A numeração oficial só nasce na geração final. Antes disso, o caso permanece sem número de RT.
