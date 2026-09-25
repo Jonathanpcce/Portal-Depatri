@@ -374,6 +374,29 @@ function pluginRtEvolucoes_(numOcorrencia) {
   return desenvCoreListarEvolucoes_(numOcorrencia) || [];
 }
 
+function pluginRtAplicarDifusao_(numOcorrencia, difusao) {
+  var valor = String(difusao == null ? '' : difusao).trim();
+  if (!valor) return '';
+
+  var encontrada = pluginRtLocalizarDemanda_(numOcorrencia);
+  pluginRtAtualizarDemanda_(encontrada, {
+    DIFUSAO: valor,
+    DATA_ATUALIZACAO: pluginRtAgora_()
+  });
+  SpreadsheetApp.flush();
+
+  // Confirma o valor persistido antes de prosseguir.
+  encontrada = pluginRtLocalizarDemanda_(numOcorrencia);
+  var demanda = pluginRtDemandaObjeto_(encontrada);
+  var confirmado = String(demanda.difusao || '').trim();
+
+  if (pluginRtNormalizar_(confirmado) !== pluginRtNormalizar_(valor)) {
+    throw new Error('Não foi possível confirmar a gravação da DIFUSÃO no caso.');
+  }
+
+  return confirmado;
+}
+
 function pluginRtPreparar(payload) {
   payload = payload || {};
   var usuarioLogin = String(payload.usuarioLogin || '').trim();
@@ -383,9 +406,17 @@ function pluginRtPreparar(payload) {
 
   if (typeof validarAcessoDesenvDemandas_ === 'function') validarAcessoDesenvDemandas_(usuarioLogin);
 
+  if (payload.difusao !== undefined && String(payload.difusao || '').trim()) {
+    pluginRtAplicarDifusao_(numOcorrencia, payload.difusao);
+  }
+
   var pack = pluginRtGarantirNumeroEPasta_(numOcorrencia);
   var encontrada = pluginRtLocalizarDemanda_(numOcorrencia);
   var demanda = pluginRtDemandaObjeto_(encontrada);
+
+  if (!String(demanda.difusao || '').trim()) {
+    throw new Error('DIFUSÃO não informada para este RT.');
+  }
 
   return {
     sucesso: true,
@@ -394,6 +425,7 @@ function pluginRtPreparar(payload) {
     nomePasta: pack.pasta.getName(),
     linkDriveImagens: pack.pasta.getUrl(),
     demanda: demanda,
+    difusao: String(demanda.difusao || ''),
     evolucoes: pluginRtEvolucoes_(numOcorrencia),
     imagens: pluginRtListarImagens_(numOcorrencia),
     templateId: pluginRtTemplateId_(),
@@ -453,6 +485,7 @@ function pluginRtPrevia(payload) {
     sucesso: true,
     numeroRt: preparado.numeroRt,
     linkDriveImagens: preparado.linkDriveImagens,
+    difusao: String(demanda.difusao || ''),
     resumo: pluginRtResumo_(payload, demanda),
     blocos: blocos,
     imagensSomenteDrive: imagens.filter(function(img) { return !img.incluirNoRt; }),
@@ -898,7 +931,8 @@ function pluginRtFinalizar(payload) {
 
   var preparada = pluginRtPreparar({
     usuarioLogin: usuarioLogin,
-    numOcorrencia: numOcorrencia
+    numOcorrencia: numOcorrencia,
+    difusao: payload.difusao
   });
 
   var encontrada = pluginRtLocalizarDemanda_(numOcorrencia);
