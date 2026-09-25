@@ -17,16 +17,18 @@ Toda pasta criada para um novo Relatório Técnico deve ser criada diretamente d
 A numeração NÃO deve ser inferida pelos nomes das pastas do Drive. A aba `INTEL_NUMERADOR` é a fonte oficial.
 
 ## Regra de incremento
-Ao executar o comando "Gerar RT":
-1. Ler a linha de `INTEL_NUMERADOR` em que `TIPO_DOC = RELATORIO TECNICO` e `ANO = ano corrente`.
+Não alterar o numerador durante cadastro do caso, inclusão de evoluções, upload de imagens, preparação ou prévia.
+
+Somente quando o usuário mandar **"Gerar RT"** ou autorizar a geração final:
+1. Ler naquele instante a linha de `INTEL_NUMERADOR` em que `TIPO_DOC = RELATORIO TECNICO` e `ANO = ano corrente`.
 2. Tratar `ULTIMO_NUMERO` como o último número já utilizado.
 3. Calcular `NOVO_NUMERO = ULTIMO_NUMERO + 1`.
-4. Reservar o novo número atualizando `ULTIMO_NUMERO` para `NOVO_NUMERO`.
-5. Confirmar por leitura que o valor gravado é o novo número antes de criar a pasta.
-6. Se a gravação falhar, não criar pasta nem finalizar RT.
-7. Não reutilizar um número já reservado.
+4. **Incrementar a planilha**, gravando `NOVO_NUMERO` na própria célula `ULTIMO_NUMERO`.
+5. Confirmar por nova leitura que a célula passou a registrar `NOVO_NUMERO`.
+6. Somente depois dessa confirmação usar `NOVO_NUMERO/ANO` como número oficial do RT e concluir a geração.
+7. Se a gravação ou confirmação falhar, interromper a geração.
 
-Exemplo: se `ULTIMO_NUMERO = 98`, o novo RT é `99/2026` e a célula passa a registrar `99`.
+Exemplo: se, no exato momento da geração, `ULTIMO_NUMERO = 99`, o novo RT será `100/2026` e `INTEL_NUMERADOR.ULTIMO_NUMERO` ficará gravado como `100`.
 
 ## Nome da pasta
 Usar:
