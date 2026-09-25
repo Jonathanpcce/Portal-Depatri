@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "depatri-assistente",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Fluxos operacionais do DEPATRI para ocorrências, relatórios técnicos, diligências, imagens e ofícios.",
   "author": {
     "name": "NUIP – DEPATRI/PCCE"
@@ -18,25 +18,21 @@
     "com.openai": {
       "interface": {
         "displayName": "DEPATRI – Assistente",
-        "shortDescription": "Ocorrências, RT, diligências, imagens e ofícios.",
-        "longDescription": "Assistente operacional para organizar ocorrências, consultar dados do Portal/Drive, preparar relatórios técnicos no padrão DEPATRI, trabalhar com imagens e auxiliar na geração de ofícios.",
+        "shortDescription": "Casos, RT, evoluções, imagens, ofícios e pendências do DEPATRI.",
+        "longDescription": "Assistente operacional do DEPATRI para iniciar e continuar casos, registrar informações na base, adicionar evoluções e imagens, preparar e gerar Relatórios Técnicos, produzir ofícios, consultar pendências e apoiar o Kanban operacional diretamente a partir do ChatGPT.",
         "developerName": "NUIP – DEPATRI/PCCE",
         "category": "Productivity",
         "defaultPrompt": [
-          "Gere o Relatório Técnico do caso que eu indicar usando tudo que já temos e mostre a prévia antes de finalizar.",
-          "Crie ou abra a pasta de imagens do caso que eu indicar e organize os arquivos vinculados.",
-          "Analise a imagem que eu enviar, descreva apenas o que for objetivamente visível e prepare uma legenda técnica.",
-          "Adicione a diligência que eu enviar ao caso indicado, ajustando somente a redação sem alterar os fatos.",
-          "Faça um ofício de imagens a partir do caso que eu indicar, usando o modelo oficial e criando a pendência de envio.",
-          "Faça um ofício para locadora pela placa, usando o modelo oficial e criando a pendência de envio.",
-          "Faça um ofício para provedor de internet, usando o modelo oficial e criando a pendência de envio.",
-          "Faça um ofício para empresa de telefonia, usando o modelo oficial e criando a pendência de envio.",
-          "Faça um ofício para iFood, usando o modelo oficial e criando a pendência de envio.",
-          "Faça um mandado de intimação usando o modelo oficial.",
-          "Mostre os ofícios pendentes de envio.",
-          "Mostre os ofícios que estão aguardando resposta e verifique se chegou alguma resposta no Gmail.",
-          "Transcreva o áudio que eu enviar e mantenha a transcrição literal separada da redação técnica.",
-          "Transcreva o áudio que eu enviar e adicione-o ao caso que eu indicar."
+          "INICIAR NOVO CASO",
+          "CONTINUAR CASO EXISTENTE",
+          "ADICIONAR EVOLUÇÃO",
+          "ADICIONAR / ANALISAR IMAGEM",
+          "MOSTRAR PRÉVIA DO RT",
+          "GERAR RT",
+          "GERAR OFÍCIO",
+          "CONSULTAR CASO",
+          "VER PENDÊNCIAS",
+          "VER KANBAN"
         ]
       }
     }
