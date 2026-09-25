@@ -595,11 +595,23 @@ function pluginRtSubstituirTag_(container, tag, valor) {
 }
 
 function pluginRtEstilizarTexto_(p) {
+  // Corpo do relatório: Garamond 13, justificado, sem negrito por padrão
+  // e recuo de 2 cm na primeira linha de cada parágrafo.
   p.setFontFamily('Garamond')
-    .setFontSize(12)
+    .setFontSize(13)
     .setLineSpacing(1.15)
+    .setSpacingBefore(0)
     .setSpacingAfter(8)
+    .setIndentStart(0)
+    .setIndentFirstLine(56.7)
     .setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
+
+  var texto = p.editAsText();
+  texto.setFontFamily('Garamond');
+  texto.setFontSize(13);
+  texto.setBold(false);
+  texto.setItalic(false);
+
   return p;
 }
 
@@ -611,9 +623,69 @@ function pluginRtInserirTexto_(body, indice, texto) {
     .filter(Boolean);
 
   blocos.forEach(function(bloco) {
-    pluginRtEstilizarTexto_(body.insertParagraph(indice++, bloco));
+    // Somente trechos marcados com **texto** ficam em negrito.
+    var limpo = '';
+    var destaques = [];
+    var regex = /\*\*([^*]+?)\*\*/g;
+    var ultimo = 0;
+    var match;
+
+    while ((match = regex.exec(bloco)) !== null) {
+      limpo += bloco.substring(ultimo, match.index);
+      var inicio = limpo.length;
+      limpo += match[1];
+      var fim = limpo.length - 1;
+      if (fim >= inicio) destaques.push({ inicio: inicio, fim: fim });
+      ultimo = match.index + match[0].length;
+    }
+    limpo += bloco.substring(ultimo);
+
+    var p = body.insertParagraph(indice++, limpo);
+    pluginRtEstilizarTexto_(p);
+
+    if (destaques.length) {
+      var t = p.editAsText();
+      destaques.forEach(function(d) {
+        t.setBold(d.inicio, d.fim, true);
+      });
+    }
   });
+
   return indice;
+}
+
+function pluginRtFormatarResumo_(body) {
+  if (!body) return;
+
+  var achado = body.findText('RESUMO:');
+  if (!achado) return;
+
+  var el = achado.getElement();
+  if (!el) return;
+
+  var pai = el.getParent();
+  if (!pai || pai.getType() !== DocumentApp.ElementType.PARAGRAPH) return;
+
+  var p = pai.asParagraph();
+  var t = p.editAsText();
+  var conteudo = String(t.getText() || '');
+
+  // Apenas o rótulo RESUMO: permanece em negrito.
+  t.setFontFamily('Garamond');
+  t.setFontSize(13);
+  t.setBold(false);
+  t.setItalic(false);
+
+  var idx = conteudo.indexOf('RESUMO:');
+  if (idx > -1) {
+    t.setBold(idx, idx + 'RESUMO:'.length - 1, true);
+  }
+
+  p.setFontFamily('Garamond')
+    .setFontSize(13)
+    .setLineSpacing(1.15)
+    .setSpacingAfter(8)
+    .setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
 }
 
 function pluginRtInserirImagem_(body, indice, img, contadorFigura) {
@@ -886,6 +958,9 @@ function pluginRtFinalizar(payload) {
     try { pluginRtSubstituirTag_(doc.getHeader(), tag, tags[tag]); } catch (e1) {}
     try { pluginRtSubstituirTag_(doc.getFooter(), tag, tags[tag]); } catch (e2) {}
   });
+
+  // O modelo deixa a linha do resumo em negrito; corrigimos após substituir as tags.
+  pluginRtFormatarResumo_(body);
 
   var qtdFiguras = pluginRtInserirCorpoEstruturado_(
     body,
