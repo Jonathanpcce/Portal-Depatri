@@ -24,6 +24,20 @@ Os parágrafos seguintes devem desenvolver a narrativa sem criar um novo parágr
 ## Equipes
 Equipes válidas: ALFA, BRAVO, CHARLIE, DELTA e ECHO. Não inserir equipe que não esteja informada no caso.
 
+## Difusão
+Antes de gerar/finalizar um Relatório Técnico pelo chat, confirmar a DIFUSÃO quando ela ainda não tiver sido informada na conversa nem estiver claramente registrada no caso.
+
+Apresentar as opções:
+- DELEGACIA DE ROUBOS DE FURTOS - DRF
+- DELEGACIA DE ROUBOS DE FURTOS DE VEÍCULOS - DRFV
+- DELEGACIA ANTISEQUESTRO - DAS
+- DELEGACIA DE DEFRAUDAÇÕES E FALSIFICAÇÕES - DDF
+- NÚCLEO MEU CELULAR
+- OUTROS
+
+Se o usuário escolher **OUTROS**, perguntar qual é a delegacia/unidade exata para difusão. Depois de definida, não perguntar novamente no mesmo caso, salvo se o usuário pedir alteração.
+
+
 ## Ocorrência ininterrupta
 Quando o usuário indicar que a ocorrência foi ininterrupta, usar o seguinte conteúdo, ajustando apenas a integração gramatical ao relatório:
 
