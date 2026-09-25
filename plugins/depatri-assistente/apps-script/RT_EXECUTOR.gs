@@ -203,7 +203,7 @@ function pluginRtAtualizarDemanda_(encontrada, valores) {
   desenvCoreAtualizarLinha_(encontrada.aba, encontrada.rowIndex, valores);
 }
 
-function pluginRtReservarNumero_() {
+function pluginRtIncrementarNumeradorNaGeracao_() {
   var aba = pluginRtPlanilha_().getSheetByName(PLUGIN_DEPATRI_RT_CFG.ABA_NUMERADOR);
   if (!aba) throw new Error('Aba INTEL_NUMERADOR não encontrada.');
 
@@ -229,18 +229,27 @@ function pluginRtReservarNumero_() {
       break;
     }
   }
-  if (linha < 2) throw new Error('Numerador de RELATORIO TECNICO/' + ano + ' não encontrado.');
 
+  if (linha < 2) {
+    throw new Error('Numerador de RELATORIO TECNICO/' + ano + ' não encontrado.');
+  }
+
+  // Lê o valor atual somente no instante da geração.
   var atual = Number(aba.getRange(linha, idxUltimo + 1).getValue());
   if (!isFinite(atual) || atual < 0) throw new Error('ULTIMO_NUMERO inválido.');
 
   var novo = atual + 1;
+
+  // Incrementa a própria planilha.
   aba.getRange(linha, idxUltimo + 1).setValue(novo);
   SpreadsheetApp.flush();
 
-  if (Number(aba.getRange(linha, idxUltimo + 1).getValue()) !== novo) {
-    throw new Error('Não foi possível confirmar a reserva do número do RT.');
+  // Confirma que o novo número ficou realmente gravado.
+  var confirmado = Number(aba.getRange(linha, idxUltimo + 1).getValue());
+  if (confirmado !== novo) {
+    throw new Error('Não foi possível confirmar o incremento do número do RT na planilha.');
   }
+
   return novo + '/' + ano;
 }
 
@@ -254,55 +263,102 @@ function pluginRtNomeSeguro_(texto) {
     .substring(0, 120) || 'ocorrencia';
 }
 
-function pluginRtGarantirNumeroEPasta_(numOcorrencia) {
+function pluginRtGarantirPastaTrabalho_(numOcorrencia) {
+  var encontrada = pluginRtLocalizarDemanda_(numOcorrencia);
+  var demanda = pluginRtDemandaObjeto_(encontrada);
+
+  if (demanda.pastaRtId) {
+    try {
+      return {
+        pasta: DriveApp.getFolderById(demanda.pastaRtId),
+        reutilizado: true,
+        numeroRt: String(demanda.numeroRt || '')
+      };
+    } catch (ignorar) {}
+  }
+
+  var nome;
+  if (demanda.numeroRt) {
+    nome = 'RT ' + String(demanda.numeroRt).replace(/\//g, '.') +
+      ' - IMAGENS - ' + pluginRtNomeSeguro_(demanda.numOcorrencia || numOcorrencia);
+  } else {
+    nome = 'EM ELABORACAO - IMAGENS - ' +
+      pluginRtNomeSeguro_(demanda.numOcorrencia || numOcorrencia);
+  }
+
+  var mae = pluginRtPastaMae_();
+  var it = mae.getFoldersByName(nome);
+  var pasta = it.hasNext() ? it.next() : mae.createFolder(nome);
+
+  pluginRtAtualizarDemanda_(encontrada, {
+    PASTA_RT_ID: pasta.getId(),
+    LINK_DRIVE_IMAGENS: pasta.getUrl(),
+    DATA_ATUALIZACAO: pluginRtAgora_()
+  });
+  SpreadsheetApp.flush();
+
+  return {
+    pasta: pasta,
+    reutilizado: false,
+    numeroRt: String(demanda.numeroRt || '')
+  };
+}
+
+function pluginRtNumerarNaGeracao_(numOcorrencia) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) {
-    throw new Error('Outro RT está sendo numerado. Tente novamente em alguns segundos.');
+    throw new Error('Outro RT está sendo gerado. Tente novamente em alguns segundos.');
   }
 
   try {
     var encontrada = pluginRtLocalizarDemanda_(numOcorrencia);
     var demanda = pluginRtDemandaObjeto_(encontrada);
 
-    if (demanda.numeroRt && demanda.pastaRtId) {
-      try {
-        return {
-          numeroRt: demanda.numeroRt,
-          pasta: DriveApp.getFolderById(demanda.pastaRtId),
-          reutilizado: true
-        };
-      } catch (ignorar) {}
+    // Regenerações/repetições do mesmo caso nunca incrementam novamente.
+    if (demanda.numeroRt) {
+      var existente = pluginRtGarantirPastaTrabalho_(numOcorrencia);
+      var nomeExistente = 'RT ' + String(demanda.numeroRt).replace(/\//g, '.') +
+        ' - IMAGENS - ' + pluginRtNomeSeguro_(demanda.numOcorrencia || numOcorrencia);
+      if (existente.pasta.getName() !== nomeExistente) {
+        existente.pasta.setName(nomeExistente);
+      }
+      return {
+        numeroRt: demanda.numeroRt,
+        pasta: existente.pasta,
+        reutilizado: true
+      };
     }
 
-    var numeroRt = demanda.numeroRt;
-    if (!numeroRt) {
-      numeroRt = pluginRtReservarNumero_();
-      pluginRtAtualizarDemanda_(encontrada, {
-        NUM_RT: numeroRt,
-        DATA_ATUALIZACAO: pluginRtAgora_()
-      });
-      SpreadsheetApp.flush();
-    }
+    // SOMENTE AQUI, na geração final, lê +1 e incrementa INTEL_NUMERADOR.
+    var numeroRt = pluginRtIncrementarNumeradorNaGeracao_();
+
+    // Persiste imediatamente o número consumido no caso.
+    pluginRtAtualizarDemanda_(encontrada, {
+      NUM_RT: numeroRt,
+      DATA_ATUALIZACAO: pluginRtAgora_()
+    });
+    SpreadsheetApp.flush();
 
     encontrada = pluginRtLocalizarDemanda_(numOcorrencia);
     demanda = pluginRtDemandaObjeto_(encontrada);
 
+    var pasta;
     if (demanda.pastaRtId) {
       try {
-        return {
-          numeroRt: numeroRt,
-          pasta: DriveApp.getFolderById(demanda.pastaRtId),
-          reutilizado: true
-        };
+        pasta = DriveApp.getFolderById(demanda.pastaRtId);
       } catch (ignorar2) {}
     }
 
-    var nome = 'RT ' + String(numeroRt).replace(/\//g, '.') +
+    var nomeFinal = 'RT ' + String(numeroRt).replace(/\//g, '.') +
       ' - IMAGENS - ' + pluginRtNomeSeguro_(demanda.numOcorrencia || numOcorrencia);
 
-    var mae = pluginRtPastaMae_();
-    var it = mae.getFoldersByName(nome);
-    var pasta = it.hasNext() ? it.next() : mae.createFolder(nome);
+    if (!pasta) {
+      var mae = pluginRtPastaMae_();
+      var it = mae.getFoldersByName(nomeFinal);
+      pasta = it.hasNext() ? it.next() : mae.createFolder(nomeFinal);
+    } else if (pasta.getName() !== nomeFinal) {
+      pasta.setName(nomeFinal);
+    }
 
     pluginRtAtualizarDemanda_(encontrada, {
       NUM_RT: numeroRt,
@@ -312,7 +368,11 @@ function pluginRtGarantirNumeroEPasta_(numOcorrencia) {
     });
     SpreadsheetApp.flush();
 
-    return { numeroRt: numeroRt, pasta: pasta, reutilizado: false };
+    return {
+      numeroRt: numeroRt,
+      pasta: pasta,
+      reutilizado: false
+    };
   } finally {
     lock.releaseLock();
   }
@@ -404,36 +464,32 @@ function pluginRtPreparar(payload) {
   if (!usuarioLogin) throw new Error('usuarioLogin é obrigatório.');
   if (!numOcorrencia) throw new Error('numOcorrencia é obrigatório.');
 
-  if (typeof validarAcessoDesenvDemandas_ === 'function') validarAcessoDesenvDemandas_(usuarioLogin);
+  if (typeof validarAcessoDesenvDemandas_ === 'function') {
+    validarAcessoDesenvDemandas_(usuarioLogin);
+  }
 
-  // A DIFUSÃO precisa estar definida ANTES de reservar número ou criar pasta.
-  // Se veio do chat/plugin, grava e confirma no caso.
   if (payload.difusao !== undefined && String(payload.difusao || '').trim()) {
     pluginRtAplicarDifusao_(numOcorrencia, payload.difusao);
   }
 
-  var encontradaAntes = pluginRtLocalizarDemanda_(numOcorrencia);
-  var demandaAntes = pluginRtDemandaObjeto_(encontradaAntes);
-  if (!String(demandaAntes.difusao || '').trim()) {
-    throw new Error('DIFUSÃO não informada para este RT.');
-  }
-
-  var pack = pluginRtGarantirNumeroEPasta_(numOcorrencia);
+  // Preparação não consome número.
+  var pastaPack = pluginRtGarantirPastaTrabalho_(numOcorrencia);
   var encontrada = pluginRtLocalizarDemanda_(numOcorrencia);
   var demanda = pluginRtDemandaObjeto_(encontrada);
 
   return {
     sucesso: true,
-    numeroRt: pack.numeroRt,
-    pastaId: pack.pasta.getId(),
-    nomePasta: pack.pasta.getName(),
-    linkDriveImagens: pack.pasta.getUrl(),
+    numeroRt: String(demanda.numeroRt || ''),
+    numeroPendente: !String(demanda.numeroRt || '').trim(),
+    pastaId: pastaPack.pasta.getId(),
+    nomePasta: pastaPack.pasta.getName(),
+    linkDriveImagens: pastaPack.pasta.getUrl(),
     demanda: demanda,
     difusao: String(demanda.difusao || ''),
     evolucoes: pluginRtEvolucoes_(numOcorrencia),
     imagens: pluginRtListarImagens_(numOcorrencia),
     templateId: pluginRtTemplateId_(),
-    reutilizado: !!pack.reutilizado
+    reutilizado: !!pastaPack.reutilizado
   };
 }
 
@@ -524,7 +580,7 @@ function pluginRtAdicionarImagem(payload) {
 
   if (typeof validarAcessoDesenvDemandas_ === 'function') validarAcessoDesenvDemandas_(usuarioLogin);
 
-  var pack = pluginRtGarantirNumeroEPasta_(numOcorrencia);
+  var pack = pluginRtGarantirPastaTrabalho_(numOcorrencia);
   var aba = pluginRtGarantirColunasImagem_();
   var headers = aba.getRange(1, 1, 1, aba.getLastColumn()).getValues()[0];
   var existentes = pluginRtListarImagens_(numOcorrencia);
@@ -562,7 +618,8 @@ function pluginRtAdicionarImagem(payload) {
   return {
     sucesso: true,
     idImagem: mapa.ID_IMAGEM,
-    numeroRt: pack.numeroRt,
+    numeroRt: String(pack.numeroRt || ''),
+    numeroPendente: !String(pack.numeroRt || '').trim(),
     fileId: file.getId(),
     url: file.getUrl(),
     legenda: mapa.LEGENDA,
@@ -927,20 +984,25 @@ function pluginRtFinalizar(payload) {
   payload = payload || {};
   var usuarioLogin = String(payload.usuarioLogin || '').trim();
   var numOcorrencia = String(payload.numOcorrencia || '').trim();
+
   if (!usuarioLogin || !numOcorrencia) {
     throw new Error('usuarioLogin e numOcorrencia são obrigatórios.');
   }
 
-  if (typeof validarAcessoDesenvDemandas_ === 'function') validarAcessoDesenvDemandas_(usuarioLogin);
+  if (typeof validarAcessoDesenvDemandas_ === 'function') {
+    validarAcessoDesenvDemandas_(usuarioLogin);
+  }
 
-  var preparada = pluginRtPreparar({
-    usuarioLogin: usuarioLogin,
-    numOcorrencia: numOcorrencia,
-    difusao: payload.difusao
-  });
+  if (payload.difusao !== undefined && String(payload.difusao || '').trim()) {
+    pluginRtAplicarDifusao_(numOcorrencia, payload.difusao);
+  }
 
   var encontrada = pluginRtLocalizarDemanda_(numOcorrencia);
   var demanda = pluginRtDemandaObjeto_(encontrada);
+
+  if (!String(demanda.difusao || '').trim()) {
+    throw new Error('DIFUSÃO não informada para este RT.');
+  }
 
   if (!payload.forcarNovaVersao && demanda.urlDoc && demanda.urlPdf) {
     return {
@@ -953,8 +1015,15 @@ function pluginRtFinalizar(payload) {
     };
   }
 
-  var pasta = DriveApp.getFolderById(preparada.pastaId);
-  var numeroRt = preparada.numeroRt;
+  // O número oficial nasce somente agora.
+  // Lê INTEL_NUMERADOR, soma +1, incrementa a planilha e confirma.
+  var numerado = pluginRtNumerarNaGeracao_(numOcorrencia);
+
+  encontrada = pluginRtLocalizarDemanda_(numOcorrencia);
+  demanda = pluginRtDemandaObjeto_(encontrada);
+
+  var pasta = numerado.pasta;
+  var numeroRt = numerado.numeroRt;
   var templateId = pluginRtTemplateId_();
   if (!templateId) throw new Error('Template do RT não configurado.');
 
@@ -1069,12 +1138,11 @@ function testarExecutorRtDepatri() {
 
 
 /**
- * PRIMEIRO TESTE REAL DE PREPARAÇÃO DO RT
+ * TESTE DE PREPARAÇÃO DO RT
  * Caso: IP Nº 308-85/2026
  * Usuário: admin
  *
- * ATENÇÃO: esta função reserva/consome o próximo número oficial de RT
- * caso o processo ainda não possua NUM_RT.
+ * Esta função NÃO consome número. A numeração ocorre somente em RT_FINALIZAR.
  */
 function testarPreparacaoRtIp30885() {
   var resultado = pluginDepatriExecutar('RT_PREPARAR', {
