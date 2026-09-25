@@ -45,15 +45,25 @@ Consultar `references/imagens-rt.md` sempre que o usuário quiser salvar, vincul
 1. Recuperar as informações iniciais, evoluções, diligências e imagens do caso.
 2. Consultar `references/config-rt.md` antes de numerar ou criar a pasta.
 3. Consultar o padrão em `references/padrao-relatorio.md`.
-4. Ao comando "Gerar RT", reservar o próximo número usando exclusivamente a aba `INTEL_NUMERADOR`; o valor visível em `ULTIMO_NUMERO` é o último número já usado e deve ser incrementado em +1.
-5. Só depois de confirmar a reserva do número, criar a subpasta do RT diretamente dentro da pasta-mãe definida em `references/config-rt.md`.
-6. Usar no nome da pasta o novo número, ano e identificador da ocorrência.
-7. O QR Code deve apontar para a subpasta específica recém-criada.
-8. Gerar a narrativa e uma prévia para conferência.
-9. Na prévia, indicar a posição das imagens e respectivas legendas; quando possível, mostrar miniaturas.
-10. Quando o usuário autorizar a finalização, usar o modelo institucional disponível, preservar a formatação do modelo, inserir imagens selecionadas, inserir o QR Code da pasta de mídias e gerar DOC/PDF.
-11. A pasta de mídias deve permanecer como repositório dos arquivos originais; o PDF recebe apenas as imagens relevantes escolhidas.
-12. Retornar links para DOC/PDF/pasta somente quando realmente criados.
+4. Antes de reservar número ou gerar a versão final, verificar se a **DIFUSÃO** já foi informada pelo usuário na conversa ou já consta de forma inequívoca no caso.
+5. Se a DIFUSÃO ainda não tiver sido informada, perguntar ao usuário e apresentar estas opções:
+   - DELEGACIA DE ROUBOS DE FURTOS - DRF
+   - DELEGACIA DE ROUBOS DE FURTOS DE VEÍCULOS - DRFV
+   - DELEGACIA ANTISEQUESTRO - DAS
+   - DELEGACIA DE DEFRAUDAÇÕES E FALSIFICAÇÕES - DDF
+   - NÚCLEO MEU CELULAR
+   - OUTROS
+6. Se o usuário selecionar **OUTROS**, perguntar qual é a delegacia/unidade exata para difusão e usar exatamente a denominação informada.
+7. Não perguntar novamente pela DIFUSÃO quando ela já tiver sido definida anteriormente na conversa ou estiver claramente registrada no caso.
+8. Ao comando "Gerar RT", reservar o próximo número usando exclusivamente a aba `INTEL_NUMERADOR`; o valor visível em `ULTIMO_NUMERO` é o último número já usado e deve ser incrementado em +1.
+9. Só depois de confirmar a reserva do número, criar a subpasta do RT diretamente dentro da pasta-mãe definida em `references/config-rt.md`.
+10. Usar no nome da pasta o novo número, ano e identificador da ocorrência.
+11. O QR Code deve apontar para a subpasta específica recém-criada.
+12. Gerar a narrativa e uma prévia para conferência.
+13. Na prévia, indicar também a DIFUSÃO selecionada, além da posição das imagens e respectivas legendas; quando possível, mostrar miniaturas.
+14. Quando o usuário autorizar a finalização, usar o modelo institucional disponível, preservar a formatação do modelo, inserir imagens selecionadas, inserir o QR Code da pasta de mídias e gerar DOC/PDF.
+15. A pasta de mídias deve permanecer como repositório dos arquivos originais; o PDF recebe apenas as imagens relevantes escolhidas.
+16. Retornar links para DOC/PDF/pasta somente quando realmente criados.
 
 ### Segurança da numeração
 - Nunca escolher o número pelo maior nome de pasta encontrado no Drive.
@@ -99,9 +109,10 @@ Quando o backend Apps Script/MCP estiver conectado, usar estas ações determin�
 
 ### Ordem obrigatória do comando "Gerar RT"
 1. Consultar o caso e compor/revisar o conteúdo narrativo.
-2. Executar `RT_PREPARAR`.
-3. Executar `RT_PREVIA` e apresentar a prévia ao usuário.
-4. Aceitar ajustes de texto, imagens e legendas.
-5. Somente quando o usuário pedir para finalizar, executar `RT_FINALIZAR`.
+2. Confirmar a **DIFUSÃO**. Se estiver ausente, perguntar usando a lista institucional definida acima; se a resposta for **OUTROS**, pedir a delegacia/unidade exata.
+3. Executar `RT_PREPARAR`.
+4. Executar `RT_PREVIA` e apresentar a prévia ao usuário, incluindo a DIFUSÃO.
+5. Aceitar ajustes de texto, imagens e legendas.
+6. Somente quando o usuário pedir para finalizar, executar `RT_FINALIZAR`.
 
 O modelo nunca deve gerar ou consumir um número por conta própria. A numeração é responsabilidade exclusiva de `RT_PREPARAR`, que usa `LockService` e a aba `INTEL_NUMERADOR`.
