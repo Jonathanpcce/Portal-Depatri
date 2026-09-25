@@ -406,17 +406,21 @@ function pluginRtPreparar(payload) {
 
   if (typeof validarAcessoDesenvDemandas_ === 'function') validarAcessoDesenvDemandas_(usuarioLogin);
 
+  // A DIFUSÃO precisa estar definida ANTES de reservar número ou criar pasta.
+  // Se veio do chat/plugin, grava e confirma no caso.
   if (payload.difusao !== undefined && String(payload.difusao || '').trim()) {
     pluginRtAplicarDifusao_(numOcorrencia, payload.difusao);
+  }
+
+  var encontradaAntes = pluginRtLocalizarDemanda_(numOcorrencia);
+  var demandaAntes = pluginRtDemandaObjeto_(encontradaAntes);
+  if (!String(demandaAntes.difusao || '').trim()) {
+    throw new Error('DIFUSÃO não informada para este RT.');
   }
 
   var pack = pluginRtGarantirNumeroEPasta_(numOcorrencia);
   var encontrada = pluginRtLocalizarDemanda_(numOcorrencia);
   var demanda = pluginRtDemandaObjeto_(encontrada);
-
-  if (!String(demanda.difusao || '').trim()) {
-    throw new Error('DIFUSÃO não informada para este RT.');
-  }
 
   return {
     sucesso: true,
