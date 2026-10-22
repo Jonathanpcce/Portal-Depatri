@@ -2351,6 +2351,7 @@ function classificarTipoDocumentoIntel_(texto) {
   if (n.includes('IMAGEM') || n.includes('IMAGENS') || n.includes('VIDEO') || n.includes('VIDEOS') || n.includes('CFTV') || n.includes('CAMERA') || n.includes('CAMERAS') || n.includes('NUVID')) return 'IMAGENS';
   if (n.includes('LOCADORA') && (n.includes('ENDERECO') || n.includes('RAIO'))) return 'LOCADORA_ENDERECO';
   if (n.includes('LOCADORA')) return n.includes('ENDERECO') ? 'LOCADORA_ENDERECO' : 'LOCADORA_PLACA';
+  if (n.includes('GOOGLE')) return 'GOOGLE';
   if (n.includes('PROVEDOR')) return 'PROVEDOR';
   if (n.includes('TELEFON')) return 'TELEFONIA';
   return 'OUTRO';
@@ -2595,6 +2596,24 @@ function limparCorpoDinamicoIntel_(texto) {
   return saida;
 }
 
+// Identificadores da requisição cadastral ao Google. Nunca converter IDs longos em números.
+function montarListaGoogleIntel_(dados) {
+  const nomes = { EMAIL: 'E-MAIL', ID_GOOGLE: 'ID DA CONTA GOOGLE', TERMINAL: 'TERMINAL / TELEFONE', IMEI: 'IMEI' };
+  const itens = Array.isArray(dados && dados.identificadoresGoogle) ? dados.identificadoresGoogle : [];
+  const vistos = {};
+  const linhas = [];
+  itens.forEach(function(item) {
+    const tipo = String(item && item.tipo || '').trim().toUpperCase();
+    const valor = String(item && item.valor || '').trim();
+    if (!nomes[tipo] || !valor) return;
+    const chave = tipo + '|' + valor.toLowerCase();
+    if (vistos[chave]) return;
+    vistos[chave] = true;
+    linhas.push((linhas.length + 1) + '. ' + nomes[tipo] + ': ' + valor);
+  });
+  return linhas.join('\n');
+}
+
 function montarTagMapIntel_(payload, numeroOficio, tipoSelecionado, assuntoBase, textoBase) {
   const dados = payload.dadosEspecificos || {};
   const categoria = classificarTipoDocumentoIntel_(`${tipoSelecionado.nome || ''} ${tipoSelecionado.id || ''}`);
@@ -2634,6 +2653,7 @@ function montarTagMapIntel_(payload, numeroOficio, tipoSelecionado, assuntoBase,
   return {
     NUM_OFICIO: numeroOficio,
     NUMERO_OFICIO: numeroOficio,
+    OFICIO_NUMERO: numeroOficio,
     NUM_DOC: numDocApenas,
     ANO: anoDoc,
 
@@ -2739,6 +2759,8 @@ function montarTagMapIntel_(payload, numeroOficio, tipoSelecionado, assuntoBase,
     'LOCAL ENDERECO': dados.enderecoDelegacia || '',
     'LOCAL ENDEREÇO': dados.enderecoDelegacia || '',
 
+    LISTA_GOOGLE: categoria === 'GOOGLE' ? montarListaGoogleIntel_(dados) : '',
+    PERIODO_GOOGLE: categoria === 'GOOGLE' && periodoDados ? 'Período de referência: ' + periodoDados : '',
     LISTA_IFOOD: categoria === 'IFOOD' ? listaCategoria : '',
     LISTA_INTERNET: categoria === 'PROVEDOR' ? listaCategoria : '',
     TABELA_INTERNET: categoria === 'PROVEDOR' ? listaCategoria : '',
@@ -2956,6 +2978,17 @@ function processarGeracaoOficio(payload) {
         'O tipo de documento "' + (tipoSelecionado.nome || tipoSelecionado.id || '') +
         '" não possui MODELO_DOC_ID definido na aba DB_TEXTOS_DOCS.'
       );
+    }
+
+    if (categoria === 'GOOGLE') {
+      if (!montarListaGoogleIntel_(dadosEspecificos)) {
+        throw new Error('Informe pelo menos um identificador (e-mail, ID Google, terminal ou IMEI).');
+      }
+      const inicio = String(dadosEspecificos.dataInicial || '').trim();
+      const fim = String(dadosEspecificos.dataFinal || '').trim();
+      if (Boolean(inicio) !== Boolean(fim) || (inicio && fim && inicio > fim)) {
+        throw new Error('Para indicar período do Google, informe data inicial e final válidas, em ordem cronológica.');
+      }
     }
 
     if (categoria === 'TELEFONIA') {
