@@ -2699,6 +2699,8 @@ function classificarTipoDocumentoMod3(texto) {
         return 'LOCADORA_ENDERECO';
     if (n.includes('LOCADORA'))
         return 'LOCADORA_PLACA';
+    if (n.includes('GOOGLE'))
+        return 'GOOGLE';
     if (n.includes('PROVEDOR'))
         return 'PROVEDOR';
     if (n.includes('TELEFON'))
@@ -2912,7 +2914,16 @@ function mudarFormularioOficio() {
     document.getElementById('tituloFormOficio').textContent = "3. ".concat(tipoSelecionado.nome);
     atualizarBadgeNumeradorMod3();
     var categoria = tipoSelecionado.categoria || classificarTipoDocumentoMod3("".concat(tipoSelecionado.nome || '', " ").concat(tipoSelecionado.id || ''));
-    if (categoria === 'IMAGENS') {
+    if (categoria === 'GOOGLE') {
+        campos.innerHTML = '<div class="small text-muted mb-3">Insira e-mail, ID da conta Google, terminal/telefone e/ou IMEI. É permitido usar diferentes tipos e vários valores no mesmo ofício; cole uma lista, um por linha.</div>' +
+            '<div id="googleLinhas"></div>' +
+            '<button type="button" class="btn btn-outline-warning btn-sm mb-3" onclick="adicionarLinhaGoogle()"><i class="fas fa-plus"></i> Adicionar identificador</button>' +
+            '<div class="row g-3"><div class="col-md-6"><label class="form-label">Período inicial (opcional)</label><input id="googleDataInicial" type="date" class="form-control" onchange="renderizarPreviaOficio()"></div>' +
+            '<div class="col-md-6"><label class="form-label">Período final (opcional)</label><input id="googleDataFinal" type="date" class="form-control" onchange="renderizarPreviaOficio()"></div></div>' +
+            '<div class="small text-muted mt-3">Resposta: nuip.depatri@pc.ce.gov.br | Prazo: 24 horas (fixos)</div>';
+        adicionarLinhaGoogle();
+    }
+    else if (categoria === 'IMAGENS') {
         campos.innerHTML = "<div class=\"row g-3\"><div class=\"col-md-12\"><label class=\"form-label\">Endere\u00E7o Completo</label><input type=\"text\" id=\"imgEndereco\" class=\"form-control\"></div><div class=\"col-md-3\"><label class=\"form-label\">Data Inicial</label><input type=\"date\" id=\"imgDataInicial\" class=\"form-control\"></div><div class=\"col-md-3\"><label class=\"form-label\">Hora Inicial</label><input type=\"time\" id=\"imgHoraInicial\" class=\"form-control\"></div><div class=\"col-md-3\"><label class=\"form-label\">Data Final</label><input type=\"date\" id=\"imgDataFinal\" class=\"form-control\"></div><div class=\"col-md-3\"><label class=\"form-label\">Hora Final</label><input type=\"time\" id=\"imgHoraFinal\" class=\"form-control\"></div></div>";
     }
     else if (categoria === 'IFOOD') {
@@ -2988,6 +2999,22 @@ function adicionarLinhaProvedor() {
     }
     container.appendChild(bloco);
 }
+// Cada linha aceita também colagem em lote (uma entrada por linha).
+function adicionarLinhaGoogle() {
+    var area = document.getElementById('googleLinhas');
+    if (!area) return;
+    var bloco = document.createElement('div');
+    bloco.className = 'row g-2 mb-3 border border-secondary rounded p-2 google-linha';
+    bloco.innerHTML = '<div class="col-md-4"><label class="form-label">Tipo de identificador</label>' +
+        '<select class="form-select google-tipo" onchange="renderizarPreviaOficio()">' +
+        '<option value="EMAIL">E-mail</option><option value="ID_GOOGLE">ID da conta Google</option>' +
+        '<option value="TERMINAL">Terminal / telefone</option><option value="IMEI">IMEI</option></select></div>' +
+        '<div class="col-md-7"><label class="form-label">Valor(es), um por linha</label>' +
+        '<textarea rows="2" class="form-control google-valor" spellcheck="false" oninput="renderizarPreviaOficio()" placeholder="Informe ou cole os identificadores"></textarea></div>' +
+        '<div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-outline-danger w-100" title="Remover" onclick="this.closest(\'.google-linha\').remove(); renderizarPreviaOficio();">−</button></div>';
+    area.appendChild(bloco);
+}
+
 function adicionarLinhaTelefonia() {
     var _a;
     var container = document.getElementById('telLinhas');
@@ -3088,6 +3115,33 @@ function coletarDadosEspecificosMod3() {
     var tipoSelecionado = getTipoSelecionadoMod3();
     var categoria = (tipoSelecionado === null || tipoSelecionado === void 0 ? void 0 : tipoSelecionado.categoria) || classificarTipoDocumentoMod3("".concat((tipoSelecionado === null || tipoSelecionado === void 0 ? void 0 : tipoSelecionado.nome) || '', " ").concat((tipoSelecionado === null || tipoSelecionado === void 0 ? void 0 : tipoSelecionado.id) || ''));
     var dados = {};
+    if (categoria === 'GOOGLE') {
+        var idsGoogle = [];
+        var vistosGoogle = {};
+        document.querySelectorAll('.google-linha').forEach(function(linha) {
+            var tipo = String(linha.querySelector('.google-tipo').value || '').toUpperCase();
+            var bloco = String(linha.querySelector('.google-valor').value || '');
+            bloco.split(/[\r\n;,]+/).forEach(function(item) {
+                var valor = item.trim();
+                if (!valor) return;
+                var chave = tipo + '|' + valor.toLowerCase();
+                if (vistosGoogle[chave]) return;
+                vistosGoogle[chave] = true;
+                idsGoogle.push({ tipo: tipo, valor: valor });
+            });
+        });
+        if (!idsGoogle.length) throw new Error('Informe pelo menos um identificador para o Google.');
+        dados.identificadoresGoogle = idsGoogle;
+        dados.dataInicial = (document.getElementById('googleDataInicial') || {}).value || '';
+        dados.dataFinal = (document.getElementById('googleDataFinal') || {}).value || '';
+        if (Boolean(dados.dataInicial) !== Boolean(dados.dataFinal) ||
+            (dados.dataInicial && dados.dataInicial > dados.dataFinal)) {
+            throw new Error('Informe ambas as datas do período Google, em ordem cronológica, ou deixe as duas vazias.');
+        }
+        dados.email = idsGoogle.filter(function(x) { return x.tipo === 'EMAIL'; }).map(function(x) { return x.valor; }).join('\n');
+        dados.terminal = idsGoogle.filter(function(x) { return x.tipo === 'TERMINAL'; }).map(function(x) { return x.valor; }).join('\n');
+        dados.imei = idsGoogle.filter(function(x) { return x.tipo === 'IMEI'; }).map(function(x) { return x.valor; }).join('\n');
+    }
     if (categoria === 'IMAGENS') {
         Object.assign(dados, {
             endereco: document.getElementById('imgEndereco').value.trim(),
@@ -3357,6 +3411,15 @@ function montarListaPreviewMod3_(categoria, dados) {
     var tabela = Array.isArray(dados.tabelaDados) ? dados.tabelaDados : [];
     var linhas = [];
 
+    if (categoria === 'GOOGLE') {
+        var nomesGoogle = { EMAIL: 'E-MAIL', ID_GOOGLE: 'ID DA CONTA GOOGLE', TERMINAL: 'TERMINAL / TELEFONE', IMEI: 'IMEI' };
+        (dados.identificadoresGoogle || []).forEach(function(item) {
+            var rotulo = nomesGoogle[item.tipo];
+            var valor = String(item.valor || '').trim();
+            if (rotulo && valor) linhas.push((linhas.length + 1) + '. ' + rotulo + ': ' + valor);
+        });
+    }
+
     if (categoria === 'IFOOD') {
         tabela.forEach(function(item, idx) {
             var nome = String(item.NOME || item.nome || '').trim();
@@ -3458,6 +3521,7 @@ function montarTagsPreviewMod3() {
     return {
         NUM_OFICIO: numero,
         NUMERO_OFICIO: numero,
+        OFICIO_NUMERO: numero,
         NUM_DOC: numero.split('/')[0],
         ANO: numero.split('/')[1] || new Date().getFullYear(),
         EQUIPE: equipe,
@@ -3524,6 +3588,8 @@ function montarTagsPreviewMod3() {
         PERIODO_DADOS: periodoDados,
         PERIODO_TELEMETRIA: periodoTelemetria,
         AGENDAMENTO_DATA_HORA: agendamentoDataHora,
+        LISTA_GOOGLE: categoria === 'GOOGLE' ? listaCategoria : '',
+        PERIODO_GOOGLE: categoria === 'GOOGLE' && periodoDados ? 'Período de referência: ' + periodoDados : '',
         LISTA_IFOOD: categoria === 'IFOOD' ? listaCategoria : '',
         LISTA_INTERNET: categoria === 'PROVEDOR' ? listaCategoria : '',
         TABELA_INTERNET: categoria === 'PROVEDOR' ? listaCategoria : '',
